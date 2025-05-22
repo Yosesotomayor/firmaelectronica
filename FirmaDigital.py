@@ -65,7 +65,6 @@ def insert_user(username, password):
             "Password": password,
             "PrivateKey": private_key,
             "PublicKey": public_key,
-            "Files": [],
             "FechaCreacion": datetime.now().strftime("%d/%m/%Y %H:%M"),
         }
     )
