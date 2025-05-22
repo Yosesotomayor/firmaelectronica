@@ -44,25 +44,29 @@ def generate_keys(username):
     private_pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption()
+        encryption_algorithm=serialization.NoEncryption(),
     ).decode()
 
     public_pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
     ).decode()
     return private_pem, public_pem
 
+
 def insert_user(username, password):
     private_key, public_key = generate_keys(username)
-    users_table.upsert_entity({
-        "PartitionKey": "usuario",
-        "RowKey": username,
-        "Password": password,
-        "PrivateKey": private_key,
-        "PublicKey": public_key,
-        "FechaCreacion": datetime.utcnow().isoformat()
-    })
+    users_table.upsert_entity(
+        {
+            "PartitionKey": "usuario",
+            "RowKey": username,
+            "Password": password,
+            "PrivateKey": private_key,
+            "PublicKey": public_key,
+            "FechaCreacion": datetime.utcnow().isoformat(),
+        }
+    )
+
 
 def insert_access_log(username):
     acces_table.upsert_entity(
@@ -72,6 +76,7 @@ def insert_access_log(username):
             "FechaAcceso": datetime.utcnow().isoformat(),
         }
     )
+
 
 def load_users():
     users = users_table.query_entities("PartitionKey eq 'usuario'")
@@ -94,7 +99,7 @@ def verify_user(username, password):
         st.write(f"Contraseña almacenada: {user.iloc[0]['password']}")
         stored = user.iloc[0]["password"]
         hashed = stored if isinstance(stored, bytes) else stored.encode()
-        
+
         return bcrypt.checkpw(password.encode(), hashed)
     return False
 
@@ -103,7 +108,10 @@ def verify_user(username, password):
 def cargar_llave_privada():
     user = st.session_state.current_user
     user_data = users_table.get_entity("usuario", user)
-    return serialization.load_pem_private_key(user_data["PrivateKey"].encode(), password=None)
+    return serialization.load_pem_private_key(
+        user_data["PrivateKey"].encode(), password=None
+    )
+
 
 def cargar_llave_publica():
     user = st.session_state.current_user
@@ -430,6 +438,20 @@ else:
                 "Aquí puedes ver los archivos que has verificado. "
                 "Recuerda que la firma digital es única para cada archivo."
             )
+            try:
+                user_data = users_table.get_entity(
+                    "usuario", st.session_state.current_user
+                )
+                private_key_data = user_data["PrivateKey"].encode()
+
+                st.download_button(
+                    label="📥 Descargar Clave Privada Nuevamente",
+                    data=private_key_data,
+                    file_name=f"{st.session_state.current_user}_clave_privada.pem",
+                    mime="text/plain",
+                )
+            except Exception:
+                st.error("No se pudo recuperar la clave privada desde la tabla ❌")
 
 # Pie de página con HTML y CSS embebido
 footer = """
