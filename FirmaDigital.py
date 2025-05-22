@@ -182,9 +182,7 @@ def identificar_firmante(file_bytes, firma_base64):
 
 
 def registrar_acceso(username):
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    df = pd.DataFrame([[username, now]], columns=["username", "timestamp"])
-    df.to_csv(ACCESS_LOG, mode="a", header=False, index=False)
+    insert_access_log(username)
 
 
 # === POST CREACIÓN DE CUENTA ===
