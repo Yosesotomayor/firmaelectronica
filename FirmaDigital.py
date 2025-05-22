@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 import bcrypt
 import os
+import base64
 from azure.storage.blob import BlobServiceClient
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
@@ -18,14 +19,12 @@ USERS_CONTAINER = st.secrets["USERS_CONTAINER"]
 FILES_CONTAINER = st.secrets["FILES_CONTAINER"]
 LOG_CONTAINER = st.secrets["LOG_CONTAINER"]
 
-
 table_service = TableServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
 users_table = table_service.get_table_client(table_name=USERS_CONTAINER)
 acces_table = table_service.get_table_client(table_name=LOG_CONTAINER)
 
 blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
 files_container_client = blob_service_client.get_container_client(FILES_CONTAINER)
-
 
 if "role" not in st.session_state:
     st.session_state.role = "IniciarSesion"
@@ -36,7 +35,6 @@ if "current_user" not in st.session_state:
 
 
 # === FUNCIONES ===
-
 def generate_keys(username):
     private_key = rsa.generate_private_key(
         public_exponent=65537,
@@ -53,11 +51,9 @@ def generate_keys(username):
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     ).decode()
-    
     return private_pem, public_pem
 
 def insert_user(username, password):
-    # Generar claves
     private_key, public_key = generate_keys(username)
     users_table.upsert_entity({
         "PartitionKey": "usuario",
@@ -79,12 +75,12 @@ def insert_access_log(username):
     )
     acces_table.commit_transaction()
 
-
 def load_users():
-    if os.path.exists(USER_FILE):
-        return pd.read_csv(USER_FILE)
-    else:
-        return pd.DataFrame(columns=["username", "password"])
+    users = users_table.query_entities("PartitionKey eq 'usuario'")
+    user_list = []
+    for user in users:
+        user_list.append([user["RowKey"], user["Password"]])
+    return pd.DataFrame(user_list, columns=["username", "password"])
 
 
 def user_exists(username):
@@ -101,29 +97,16 @@ def verify_user(username, password):
     return False
 
 
-def save_user(username, hashed_password):
-    new_user = pd.DataFrame(
-        [[username, hashed_password.decode()]], columns=["username", "password"]
-    )
-    if os.path.exists(USER_FILE):
-        new_user.to_csv(USER_FILE, mode="a", header=False, index=False)
-    else:
-        new_user.to_csv(USER_FILE, index=False)
-
-
 # === FUNCIONES DE CRIPTOGRAFÍA ===
 def cargar_llave_privada():
-    username = st.session_state.current_user
-    path = os.path.join(PRIVATE_KEY_FOLDER, f"{username}_clave_privada.pem")
-    with open(path, "rb") as f:
-        return serialization.load_pem_private_key(f.read(), password=None)
-
+    user = st.session_state.current_user
+    user_data = users_table.get_entity("usuario", user)
+    return serialization.load_pem_private_key(user_data["PrivateKey"].encode(), password=None)
 
 def cargar_llave_publica():
-    username = st.session_state.current_user
-    path = os.path.join(PUBLIC_KEY_FOLDER, f"{username}_clave_publica.pem")
-    with open(path, "rb") as f:
-        return serialization.load_pem_public_key(f.read())
+    user = st.session_state.current_user
+    user_data = users_table.get_entity("usuario", user)
+    return serialization.load_pem_public_key(user_data["PublicKey"].encode())
 
 
 def firmar_archivo(file_bytes):
@@ -157,8 +140,7 @@ def verificar_firma(file_bytes, firma_base64):
 
 # === FIRMAS ===
 def guardar_archivo_firmado(username, filename, firma_base64):
-    user_dir = os.path.join(SIGNED_FOLDER, username)
-    os.makedirs(user_dir, exist_ok=True)
+    pass
 
     # Guarda firma
     firma_path = os.path.join(user_dir, f"{filename}.firma")

@@ -6,3 +6,4 @@ azure-core
 dotenv
 azure-data-tables
 azure-storage-blob
+base64
