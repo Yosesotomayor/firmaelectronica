@@ -228,6 +228,20 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# === Aux password=== #
+def parse_password(raw):
+    if isinstance(raw, str):
+        try:
+            return bytes(map(int, raw.split(","))).decode()
+        except Exception as e:
+            return f"⚠️ Error: {e}"
+    elif isinstance(raw, bytes):
+        try:
+            return raw.decode()
+        except Exception as e:
+            return f"⚠️ Error: {e}"
+    else:
+        return "❌ Tipo no compatible"
 
 # === MENU PRINCIPAL ===
 if not st.session_state.logged_in:
@@ -235,7 +249,7 @@ if not st.session_state.logged_in:
     # === INICIAR SESIÓN ===
     with tabs[0]:
         df_usuarios = load_users()
-        df_usuarios["password_str"] = df_usuarios["password"].apply(lambda x: bytes(map(int, x.split(","))).decode())
+        df_usuarios["password_str"] = df_usuarios["password"].apply(parse_password)
         st.subheader("📋 Debug - Usuarios desde Azure Table")
         st.dataframe(df_usuarios)
         st.session_state.role = "IniciarSesion"
