@@ -3,7 +3,9 @@ import streamlit as st
 import pandas as pd
 import bcrypt
 import os
-import base64
+from azure.storage.blob import BlobServiceClient
+import base6
+from dotenv import load_dotenv
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.exceptions import InvalidSignature
@@ -11,6 +13,11 @@ from datetime import datetime
 from PIL import Image
 
 st.set_page_config(page_title="Firma Digital", layout="wide", page_icon="🔐")
+
+load_dotenv(dotenv_path=".env")
+AZURE_CONNECTION_STRING = os.getenv("AZURE_CONNECTION_STRING")
+USERS_CONTAINER = os.getenv("USERS_CONTAINER")
+FILES_CONATAINER = os.getenv("FILES_CONTAINER")
 
 
 # === CONFIGURACIÓN INICIAL DE CARPETAS ===

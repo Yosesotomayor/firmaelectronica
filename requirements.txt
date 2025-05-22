@@ -2,3 +2,5 @@ bcrypt
 cryptography
 pandas
 datetime
+azure-core
+azure-storage-blob
