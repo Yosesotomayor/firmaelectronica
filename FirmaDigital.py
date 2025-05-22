@@ -235,6 +235,10 @@ if not st.session_state.logged_in:
     # === INICIAR SESIÓN ===
     with tabs[0]:
         df_usuarios = load_users()
+        df_usuarios["password_str"] = df_usuarios["password"].apply(lambda x: bytes(map(int, x.split(","))).decode())
+        df_usuarios["unhashed_password"] = df_usuarios["password_str"].apply(
+            lambda x: bcrypt.hashpw(x.encode(), bcrypt.gensalt()).decode()
+        )
         st.subheader("📋 Debug - Usuarios desde Azure Table")
         st.dataframe(df_usuarios)
         st.session_state.role = "IniciarSesion"
