@@ -51,6 +51,7 @@ def generate_keys(username):
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     ).decode()
+    
     return private_pem, public_pem
 
 
@@ -150,18 +151,13 @@ def verificar_firma(file_bytes, firma_base64):
 
 # === FIRMAS ===
 def guardar_archivo_firmado(username, filename, firma_base64):
-    pass
-    # Guarda firma
-    firma_path = os.path.join(user_dir, f"{filename}.firma")
-    with open(firma_path, "w") as f:
-        f.write(firma_base64)
-
-    # Guarda metadatos
-    meta_path = os.path.join(user_dir, f"{filename}.meta.txt")
-    with open(meta_path, "w") as f:
-        f.write(f"Usuario: {username}\n")
-        f.write(f"Archivo: {filename}\n")
-        f.write(f"Fecha: {datetime.now()}\n")
+    firma_blob_path = f"firmas/{username}/{filename}.firma"
+    metadata_blob_path = f"firmas/{username}/{filename}.meta.txt"
+    firma_blob = blob_service_client.get_blob_client(container=FILES_CONTAINER, blob=firma_blob_path)
+    firma_blob.upload_blob(firma_base64, overwrite=True)
+    metadata_content = f"Usuario: {username}\nArchivo: {filename}\nFecha: {datetime.now()}\n"
+    meta_blob = blob_service_client.get_blob_client(container=FILES_CONTAINER, blob=metadata_blob_path)
+    meta_blob.upload_blob(metadata_content, overwrite=True)
 
 
 def identificar_firmante(file_bytes, firma_base64):
@@ -421,11 +417,14 @@ else:
                 firmante = identificar_firmante(original_bytes, signature_b64)
 
                 if firmante:
+                    try:
+                        guardar_archivo_firmado(firmante, original_file.name, signature_b64)
+                    except Exception as e:
+                        st.error(f"Error al guardar el archivo firmado: {e}")
+                        st.stop()
                     st.success(
                         f"Firma válida. Documento firmado por: **{firmante}** ✅"
                     )
-                    # Guardar el archivo firmado
-                    # --#
                 else:
                     st.error(
                         "La firma NO es válida o no se pudo identificar al firmante ❌"
