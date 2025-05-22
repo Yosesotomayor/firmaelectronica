@@ -4,7 +4,6 @@ import pandas as pd
 import bcrypt
 import os
 from azure.storage.blob import BlobServiceClient
-import base6
 from dotenv import load_dotenv
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
