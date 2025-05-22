@@ -16,26 +16,15 @@ st.set_page_config(page_title="Firma Digital", layout="wide", page_icon="🔐")
 AZURE_CONNECTION_STRING = st.secrets["AZURE_CONNECTION_STRING"]
 USERS_CONTAINER = st.secrets["USERS_CONTAINER"]
 FILES_CONTAINER = st.secrets["FILES_CONTAINER"]
+LOG_CONTAINER = st.secrets["LOG_CONTAINER"]
 
 
 table_service = TableServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
 users_table = table_service.get_table_client(table_name=USERS_CONTAINER)
+acces_table = table_service.get_table_client(table_name=LOG_CONTAINER)
+
 blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
 files_container_client = blob_service_client.get_container_client(FILES_CONTAINER)
-
-# === CONFIGURACIÓN INICIAL DE CARPETAS ===
-PUBLIC_KEY_FOLDER = "Public_Key_folder"
-PRIVATE_KEY_FOLDER = "Private_Key_folder"
-SIGNED_FOLDER = "Signed_Files"
-USER_FILE = "usuarios.csv"
-ACCESS_LOG = "access_log.csv"
-
-if not os.path.exists(ACCESS_LOG):
-    pd.DataFrame(columns=["username", "timestamp"]).to_csv(ACCESS_LOG, index=False)
-
-os.makedirs(SIGNED_FOLDER, exist_ok=True)
-os.makedirs(PUBLIC_KEY_FOLDER, exist_ok=True)
-os.makedirs(PRIVATE_KEY_FOLDER, exist_ok=True)
 
 
 if "role" not in st.session_state:
@@ -47,34 +36,48 @@ if "current_user" not in st.session_state:
 
 
 # === FUNCIONES ===
+
 def generate_keys(username):
     private_key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=2048,
     )
+    public_key = private_key.public_key()
+    private_pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    ).decode()
 
-    # Guardar clave privada
-    private_path = os.path.join(PRIVATE_KEY_FOLDER, f"{username}_clave_privada.pem")
-    with open(private_path, "wb") as f:
-        f.write(
-            private_key.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.NoEncryption(),
-            )
-        )
+    public_pem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    ).decode()
+    
+    return private_pem, public_pem
 
-    # Guardar clave pública
-    public_path = os.path.join(PUBLIC_KEY_FOLDER, f"{username}_clave_publica.pem")
-    with open(public_path, "wb") as f:
-        f.write(
-            private_key.public_key().public_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo,
-            )
-        )
+def insert_user(username, password):
+    # Generar claves
+    private_key, public_key = generate_keys(username)
+    users_table.upsert_entity({
+        "PartitionKey": "usuario",
+        "RowKey": username,
+        "Password": password,
+        "PrivateKey": private_key,
+        "PublicKey": public_key,
+        "FechaCreacion": datetime.utcnow().isoformat()
+    })
+    users_table.commit_transaction()
 
-    return private_path, public_path
+def insert_access_log(username):
+    acces_table.upsert_entity(
+        {
+            "PartitionKey": "acceso",
+            "RowKey": username,
+            "FechaAcceso": datetime.utcnow().isoformat(),
+        }
+    )
+    acces_table.commit_transaction()
 
 
 def load_users():
