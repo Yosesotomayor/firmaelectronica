@@ -426,20 +426,10 @@ else:
         # === Re-descargar Clave Privada ===
         with signed_tabs[1]:
             st.subheader("Visualizar Archivos Verificados 📁")
-
-            priv_path = os.path.join(
-                PRIVATE_KEY_FOLDER, f"{st.session_state.current_user}_clave_privada.pem"
+            st.write(
+                "Aquí puedes ver los archivos que has verificado. "
+                "Recuerda que la firma digital es única para cada archivo."
             )
-            if os.path.exists(priv_path):
-                with open(priv_path, "rb") as f:
-                    st.download_button(
-                        label="Descargar mi Clave Privada 📥",
-                        data=f.read(),
-                        file_name=f"{st.session_state.current_user}_clave_privada.pem",
-                        mime="text/plain",
-                    )
-            else:
-                st.error("No se encontró la clave privada ❌")
 
 # Pie de página con HTML y CSS embebido
 footer = """
