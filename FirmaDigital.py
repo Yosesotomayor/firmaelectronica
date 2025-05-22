@@ -267,46 +267,46 @@ def parse_password(raw):
 if not st.session_state.logged_in:
     st.session_state["auth_tab"] = st.session_state.get("auth_tab", "login")
 
-    tab_select = st.radio("Selecciona una opción", ["Iniciar Sesión", "Crear Cuenta"], 
-                        index=0 if st.session_state["auth_tab"] == "login" else 1)
+tab_select = st.radio("Selecciona una opción", ["Iniciar Sesión", "Crear Cuenta"], 
+                      index=0 if st.session_state["auth_tab"] == "login" else 1)
 
-    if tab_select == "Iniciar Sesión":
-        st.session_state["auth_tab"] = "login"
-        # --- INICIAR SESIÓN ---
-        st.markdown("<h2>Iniciar Sesión 🔑</h2>", unsafe_allow_html=True)
-        login_user = st.text_input("Nombre de Usuario", key="login_user")
-        login_pass = st.text_input("Contraseña", type="password", key="login_pass")
+if tab_select == "Iniciar Sesión":
+    st.session_state["auth_tab"] = "login"
+    # --- INICIAR SESIÓN ---
+    st.markdown("<h2>Iniciar Sesión 🔑</h2>", unsafe_allow_html=True)
+    login_user = st.text_input("Nombre de Usuario", key="login_user")
+    login_pass = st.text_input("Contraseña", type="password", key="login_pass")
 
-        if st.button("Iniciar Sesión"):
-            if verify_user(login_user, login_pass):
-                st.session_state.logged_in = True
-                st.session_state.current_user = login_user
-                registrar_acceso(login_user)
+    if st.button("Iniciar Sesión"):
+        if verify_user(login_user, login_pass):
+            st.session_state.logged_in = True
+            st.session_state.current_user = login_user
+            registrar_acceso(login_user)
+            st.rerun()
+        else:
+            st.error("Usuario o contraseña incorrectos ❌")
+
+else:
+    st.session_state["auth_tab"] = "register"
+    # --- CREAR CUENTA ---
+    st.markdown("<h2>Crear Cuenta 💼</h2>", unsafe_allow_html=True)
+    new_user = st.text_input("Nombre de Usuario", key="new_user")
+    new_pass = st.text_input("Contraseña", type="password", key="new_pass")
+    new_pass_confirm = st.text_input("Confirmar Contraseña", type="password", key="new_pass_confirm")
+
+    if new_pass and new_pass_confirm:
+        if new_pass != new_pass_confirm:
+            st.error("Las contraseñas no coinciden ❌")
+        elif user_exists(new_user):
+            st.warning("El nombre de usuario ya está registrado ⚠️")
+        else:
+            st.success("Las contraseñas coinciden ✅")
+            if st.button("Crear Cuenta"):
+                hashed_password = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
+                insert_user(new_user, hashed_password)
+                st.session_state["auth_tab"] = "login"  # Cambia a la tab de login
+                st.success("Cuenta creada con éxito. Ahora puedes iniciar sesión.")
                 st.rerun()
-            else:
-                st.error("Usuario o contraseña incorrectos ❌")
-
-    else:
-        st.session_state["auth_tab"] = "register"
-        # --- CREAR CUENTA ---
-        st.markdown("<h2>Crear Cuenta 💼</h2>", unsafe_allow_html=True)
-        new_user = st.text_input("Nombre de Usuario", key="new_user")
-        new_pass = st.text_input("Contraseña", type="password", key="new_pass")
-        new_pass_confirm = st.text_input("Confirmar Contraseña", type="password", key="new_pass_confirm")
-
-        if new_pass and new_pass_confirm:
-            if new_pass != new_pass_confirm:
-                st.error("Las contraseñas no coinciden ❌")
-            elif user_exists(new_user):
-                st.warning("El nombre de usuario ya está registrado ⚠️")
-            else:
-                st.success("Las contraseñas coinciden ✅")
-                if st.button("Crear Cuenta"):
-                    hashed_password = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
-                    insert_user(new_user, hashed_password)
-                    st.session_state["auth_tab"] = "login"  # Cambia a la tab de login
-                    st.success("Cuenta creada con éxito. Ahora puedes iniciar sesión.")
-                    st.rerun()
 
 # === MENU DE PERFIL ===
 else:
