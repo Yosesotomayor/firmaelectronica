@@ -594,14 +594,14 @@ else:
                         "La firma NO es válida o no se pudo identificar al firmante ❌"
                     )
 
-        # === Re-descargar Clave Privada ===
+        # === Verificar Firmas ===
         with signed_tabs[1]:
             st.subheader("Verificar Firma ✅")
             original_file = st.file_uploader(
-                "Sube el archivo original", key="file_original"
+                "Sube el archivo original", key="file_original_user"
             )
             signature_file = st.file_uploader(
-                "Sube el archivo .firma", key="file_signature"
+                "Sube el archivo .firma", key="file_signature_user"
             )
 
             if original_file and signature_file:
