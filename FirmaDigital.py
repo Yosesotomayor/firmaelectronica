@@ -543,7 +543,7 @@ else:
 
         # === TABS PARA USUARIOS REGULARES ===
         signed_tabs = st.tabs(
-            ["Verificar Firma ✅", "Visualizar Archivos Verificados por el Administrador 📁"]
+            ["Verificar Firma ✅", "Visualizar Archivos Verificados por el Administrador 📁", "🔑 Cambiar Contraseña"]
         )
 
         # === Verificar Firma ===
@@ -596,6 +596,33 @@ else:
                 st.dataframe(pd.DataFrame(archivos_usuario))
             else:
                 st.info("No tienes archivos firmados todavía.")
+                
+        # CAMBIAR CONTRASEÑA ===
+        with signed_tabs[2]:
+            st.subheader("🔑 Cambiar Contraseña")
+
+            old_pass = st.text_input("Contraseña actual", type="password", key="old_pass")
+            new_pass = st.text_input("Nueva contraseña", type="password", key="new_pass_user")
+            confirm_new_pass = st.text_input("Confirmar nueva contraseña", type="password", key="confirm_new_pass_user")
+
+            if st.button("Actualizar Contraseña"):
+                if new_pass != confirm_new_pass:
+                    st.error("Las nuevas contraseñas no coinciden ❌")
+                elif not verify_user(st.session_state.current_user, old_pass):
+                    st.error("La contraseña actual es incorrecta ❌")
+                else:
+                    new_hashed = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
+                    try:
+                        # Obtener entidad actual
+                        user_data = users_table.get_entity("usuario", st.session_state.current_user)
+                        user_data["Password"] = new_hashed
+
+                        # Reemplazar sin usar 'mode'
+                        users_table.upsert_entity(user_data)
+
+                        st.success("Contraseña actualizada correctamente ✅")
+                    except Exception as e:
+                        st.error(f"No se pudo actualizar la contraseña: {e}")
 
 # Pie de página con HTML y CSS embebido
 footer = """
