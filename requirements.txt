@@ -4,4 +4,4 @@ pandas
 datetime
 azure-core
 azure-storage-blob
-azure-table-storage
+azure-data-tables
