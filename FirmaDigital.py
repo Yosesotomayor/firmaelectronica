@@ -512,14 +512,13 @@ else:
                 else:
                     new_hashed = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
                     try:
-                        users_table.update_entity(
-                            {
-                                "PartitionKey": "usuario",
-                                "RowKey": st.session_state.current_user,
-                                "Password": new_hashed,
-                            },
-                            mode="Replace"
-                        )
+                        # Obtener entidad actual
+                        user_data = users_table.get_entity("usuario", st.session_state.current_user)
+                        user_data["Password"] = new_hashed
+
+                        # Reemplazar sin usar 'mode'
+                        users_table.upsert_entity(user_data)
+
                         st.success("Contraseña actualizada correctamente ✅")
                     except Exception as e:
                         st.error(f"No se pudo actualizar la contraseña: {e}")
