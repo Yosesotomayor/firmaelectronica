@@ -333,6 +333,7 @@ else:
                 "📁 Archivos Firmados",
                 "🔐 Claves Públicas/Privadas",
                 "📈 Gráfico de Accesos",
+                "🔑 Cambiar Contraseña",
                 "📄 Código de la Página",
             ]
         )
@@ -343,17 +344,22 @@ else:
 
             users = users_table.query_entities("PartitionKey eq 'usuario'")
             for user in users:
+                username = user["RowKey"]
                 col1, col2 = st.columns([5, 1])
                 with col1:
-                    st.markdown(f"**👤 Usuario:** {user['RowKey']}")
+                    st.markdown(f"**👤 Usuario:** {username}")
                 with col2:
-                    if st.button("Eliminar", key=f"delete_{user['RowKey']}"):
-                        try:
-                            users_table.delete_entity(partition_key="usuario", row_key=user["RowKey"])
-                            st.success(f"Usuario '{user['RowKey']}' eliminado correctamente.")
-                        except Exception as e:
-                            st.error(f"No se pudo eliminar el usuario: {e}")
-
+                    if username != "Admin":
+                        if st.button("Eliminar", key=f"delete_{username}"):
+                            try:
+                                users_table.delete_entity(partition_key="usuario", row_key=username)
+                                st.success(f"Usuario '{username}' eliminado correctamente.")
+                                st.experimental_rerun()
+                            except Exception as e:
+                                st.error(f"No se pudo eliminar el usuario: {e}")
+                    else:
+                        st.info("Cuenta protegida")
+                
         # === TAB 2: Firmar Archivos ===
         with admin_tabs[1]:
             st.subheader("Firma de Archivo 📁")
@@ -502,8 +508,36 @@ else:
             except Exception as e:
                 st.error(f"No se pudo cargar el historial de accesos desde Azure: {e}")
 
-        # === TAB 7: Código Fuente ===
+        # === TAB 7:  CAMBIAR CONTRASEÑA ===
         with admin_tabs[6]:
+            st.subheader("🔑 Cambiar Contraseña")
+
+            old_pass = st.text_input("Contraseña actual", type="password", key="old_pass")
+            new_pass = st.text_input("Nueva contraseña", type="password", key="new_pass_user")
+            confirm_new_pass = st.text_input("Confirmar nueva contraseña", type="password", key="confirm_new_pass_user")
+
+            if st.button("Actualizar Contraseña"):
+                if new_pass != confirm_new_pass:
+                    st.error("Las nuevas contraseñas no coinciden ❌")
+                elif not verify_user(st.session_state.current_user, old_pass):
+                    st.error("La contraseña actual es incorrecta ❌")
+                else:
+                    new_hashed = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
+                    try:
+                        users_table.update_entity(
+                            {
+                                "PartitionKey": "usuario",
+                                "RowKey": st.session_state.current_user,
+                                "Password": new_hashed,
+                            },
+                            mode="Merge"
+                        )
+                        st.success("Contraseña actualizada correctamente ✅")
+                    except Exception as e:
+                        st.error(f"No se pudo actualizar la contraseña: {e}")
+
+        # === TAB 8: Código Fuente ===
+        with admin_tabs[7]:
             st.subheader("📄 Código Fuente de esta Aplicación")
 
             try:
