@@ -17,6 +17,11 @@ st.set_page_config(page_title="Firma Digital", layout="wide", page_icon="🔐")
 load_dotenv(dotenv_path=".env")
 
 AZURE_CONNECTION_STRING = os.getenv("AZURE_CONNECTION_STRING")
+
+st.write("AZURE_CONNECTION_STRING:", AZURE_CONNECTION_STRING)
+if AZURE_CONNECTION_STRING is None:
+    st.error("AZURE_CONNECTION_STRING no está definida. Revisa tu archivo .env.")
+    
 FILES_CONATAINER = os.getenv("FILES_CONTAINER")
 
 table_service = TableServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
