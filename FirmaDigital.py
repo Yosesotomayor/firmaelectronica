@@ -265,12 +265,15 @@ def parse_password(raw):
 
 # === MENU PRINCIPAL ===
 if not st.session_state.logged_in:
-    tabs = st.tabs(["Iniciar Sesión", "Crear Cuenta"])
-    # === INICIAR SESIÓN ===
-    with tabs[0]:
-        st.session_state.role = "IniciarSesion"
-        st.markdown("<h2>Iniciar Sesión 🔑</h2>", unsafe_allow_html=True)
+    st.session_state["auth_tab"] = st.session_state.get("auth_tab", "login")
 
+    tab_select = st.radio("Selecciona una opción", ["Iniciar Sesión", "Crear Cuenta"], 
+                        index=0 if st.session_state["auth_tab"] == "login" else 1)
+
+    if tab_select == "Iniciar Sesión":
+        st.session_state["auth_tab"] = "login"
+        # --- INICIAR SESIÓN ---
+        st.markdown("<h2>Iniciar Sesión 🔑</h2>", unsafe_allow_html=True)
         login_user = st.text_input("Nombre de Usuario", key="login_user")
         login_pass = st.text_input("Contraseña", type="password", key="login_pass")
 
@@ -279,20 +282,17 @@ if not st.session_state.logged_in:
                 st.session_state.logged_in = True
                 st.session_state.current_user = login_user
                 registrar_acceso(login_user)
-                st.rerun()  # Recarga la app para mostrar las nuevas tabs
+                st.rerun()
             else:
                 st.error("Usuario o contraseña incorrectos ❌")
 
-    # === CREAR CUENTA ===
-    with tabs[1]:
-        st.session_state.role = "CrearCuenta"
+    else:
+        st.session_state["auth_tab"] = "register"
+        # --- CREAR CUENTA ---
         st.markdown("<h2>Crear Cuenta 💼</h2>", unsafe_allow_html=True)
-
-        new_user = st.text_input("Nombre de Usuario", key="new user")
+        new_user = st.text_input("Nombre de Usuario", key="new_user")
         new_pass = st.text_input("Contraseña", type="password", key="new_pass")
-        new_pass_confirm = st.text_input(
-            "Confirmar Contraseña", type="password", key="new_pass_confirm"
-        )
+        new_pass_confirm = st.text_input("Confirmar Contraseña", type="password", key="new_pass_confirm")
 
         if new_pass and new_pass_confirm:
             if new_pass != new_pass_confirm:
@@ -304,9 +304,8 @@ if not st.session_state.logged_in:
                 if st.button("Crear Cuenta"):
                     hashed_password = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
                     insert_user(new_user, hashed_password)
-                    st.session_state["creado"] = True
-                    st.session_state["nuevo_usuario"] = new_user
-                    st.session_state["private_key_data"] = hashed_password
+                    st.session_state["auth_tab"] = "login"  # Cambia a la tab de login
+                    st.success("Cuenta creada con éxito. Ahora puedes iniciar sesión.")
                     st.rerun()
 
 # === MENU DE PERFIL ===
@@ -357,7 +356,7 @@ else:
                             try:
                                 users_table.delete_entity(partition_key="usuario", row_key=username)
                                 st.success(f"Usuario '{username}' eliminado correctamente.")
-                                st.experimental_rerun()
+                                st.rerun()
                             except Exception as e:
                                 st.error(f"No se pudo eliminar el usuario: {e}")
                     else:
