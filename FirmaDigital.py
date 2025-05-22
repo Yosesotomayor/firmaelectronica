@@ -306,7 +306,7 @@ if not st.session_state.logged_in:
                 if st.button("Crear Cuenta"):
                     hashed_password = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
                     insert_user(new_user, hashed_password)
-                    st.experimental_rerun()
+                    st.rerun()
 
 # === MENU DE PERFIL ===
 else:
