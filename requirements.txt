@@ -6,3 +6,4 @@ azure-core
 azure-data-tables
 azure-storage-blob
 pybase64
+streamlit

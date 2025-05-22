@@ -141,7 +141,6 @@ def verificar_firma(file_bytes, firma_base64):
 # === FIRMAS ===
 def guardar_archivo_firmado(username, filename, firma_base64):
     pass
-
     # Guarda firma
     firma_path = os.path.join(user_dir, f"{filename}.firma")
     with open(firma_path, "w") as f:
@@ -269,17 +268,8 @@ if not st.session_state.logged_in:
                 st.success("Las contraseñas coinciden ✅")
                 if st.button("Crear Cuenta"):
                     hashed_password = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
-                    save_user(new_user, hashed_password)
-                    private_path, _ = generate_keys(new_user)
-
-                    # Save private key temporarily in session
-                    with open(private_path, "rb") as f:
-                        st.session_state["private_key_data"] = f.read()
-                        st.session_state["creado"] = True
-                        st.session_state["nuevo_usuario"] = new_user
-
-                        # Force rerun to refresh and go to login
-                        st.rerun()
+                    insert_user(new_user, hashed_password)
+                    st.rerun()
 
 # === MENU DE PERFIL ===
 else:
