@@ -96,8 +96,6 @@ def verify_user(username, password):
     df = load_users()
     user = df[df["username"] == username]
     if not user.empty:
-        # debug
-        st.write(f"Contraseña almacenada: {user.iloc[0]['password']}")
         stored = user.iloc[0]["password"]
         hashed = stored if isinstance(stored, bytes) else stored.encode()
 
@@ -234,9 +232,11 @@ st.markdown(
 # === MENU PRINCIPAL ===
 if not st.session_state.logged_in:
     tabs = st.tabs(["Iniciar Sesión", "Crear Cuenta"])
-
     # === INICIAR SESIÓN ===
     with tabs[0]:
+        df_usuarios = load_users()
+        st.subheader("📋 Debug - Usuarios desde Azure Table")
+        st.dataframe(df_usuarios)
         st.session_state.role = "IniciarSesion"
         st.markdown("<h2>Iniciar Sesión 🔑</h2>", unsafe_allow_html=True)
 
