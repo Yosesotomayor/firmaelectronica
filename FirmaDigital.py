@@ -364,24 +364,33 @@ else:
 
         # === TAB 3: Carpetas de Claves ===
         with admin_tabs[2]:
-            st.subheader("🔐 Carpetas de Claves")
+            st.subheader("🔐 Claves Públicas y Privadas desde Azure")
 
-            # Obtener archivos
-            pub_keys = os.listdir(PUBLIC_KEY_FOLDER)
-            priv_keys = os.listdir(PRIVATE_KEY_FOLDER)
+            try:
+                users = users_table.query_entities("PartitionKey eq 'usuario'")
+                claves_pub = []
+                claves_priv = []
 
-            # Crear DataFrames
-            df_pub = pd.DataFrame(pub_keys, columns=["Claves Públicas"])
-            df_priv = pd.DataFrame(priv_keys, columns=["Claves Privadas"])
+                for user in users:
+                    claves_pub.append({
+                        "Usuario": user["RowKey"],
+                        "Clave Pública (Inicio)": user["PublicKey"][:100] + "..."
+                    })
+                    claves_priv.append({
+                        "Usuario": user["RowKey"],
+                        "Clave Privada (Inicio)": user["PrivateKey"][:100] + "..."
+                    })
 
-            # Tabs para claves
-            tab_pub, tab_priv = st.tabs(["🔓 Claves Públicas", "🔒 Claves Privadas"])
+                tab_pub, tab_priv = st.tabs(["🔓 Claves Públicas", "🔒 Claves Privadas"])
 
-            with tab_pub:
-                st.dataframe(df_pub, use_container_width=True)
+                with tab_pub:
+                    st.dataframe(pd.DataFrame(claves_pub), use_container_width=True)
 
-            with tab_priv:
-                st.dataframe(df_priv, use_container_width=True)
+                with tab_priv:
+                    st.dataframe(pd.DataFrame(claves_priv), use_container_width=True)
+
+            except Exception as e:
+                st.error(f"No se pudieron cargar las claves desde Azure: {e}")
 
         # === TAB 4: Accesos por Día ===
         with admin_tabs[3]:
