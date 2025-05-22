@@ -91,8 +91,7 @@ def verify_user(username, password):
     user = df[df["username"] == username]
     if not user.empty:
         # debug
-        st.write(f"Verificando usuario: {username}")
-        st.write(f"Contraseña ingresada: {password}")
+        st.write(f"Contraseña almacenada: {user.iloc[0]['password']}")
         hashed = user.iloc[0]["password"].encode()
         return bcrypt.checkpw(password.encode(), hashed)
     return False
