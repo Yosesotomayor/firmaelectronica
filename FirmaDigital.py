@@ -335,8 +335,8 @@ else:
             [
                 "📋 Usuarios Registrados",
                 "📂 Firmar Archivos",
-                "📁 Archivos Firmados",
                 "🔍 Verificar Firma",
+                "📁 Archivos Firmados",
                 "🔐 Claves Públicas/Privadas",
                 "📈 Gráfico de Accesos",
                 "📄 Código de la Página",
