@@ -352,7 +352,6 @@ else:
                         try:
                             users_table.delete_entity(partition_key="usuario", row_key=user["RowKey"])
                             st.success(f"Usuario '{user['RowKey']}' eliminado correctamente.")
-                            st.experimental_rerun()
                         except Exception as e:
                             st.error(f"No se pudo eliminar el usuario: {e}")
 
