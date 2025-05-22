@@ -57,7 +57,7 @@ def generate_keys():
 
 
 def insert_user(username, password):
-    private_key, public_key = generate_keys(username)
+    private_key, public_key = generate_keys()
     users_table.upsert_entity(
         {
             "PartitionKey": "usuario",
