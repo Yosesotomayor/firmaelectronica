@@ -367,7 +367,7 @@ else:
                     file_name=f"{uploaded_file.name}.firma",
                     mime="text/plain"
                 )
-        # === TAB 3: Archivos Firmados ===
+        # === TAB 3: Verificar Firma ===
         with admin_tabs[2]:
             st.subheader("Verificar Firma ✅")
             original_file = st.file_uploader(
@@ -401,7 +401,7 @@ else:
                     
         # === TAB 4: Archivos Firmados ===
         with admin_tabs[3]:
-            st.subheader("📁 Archivos Firmados por Todos los Usuarios")
+            st.subheader("📁 Archivos Firmados")
             all_firmas = []
             try:
                 blob_list = files_container_client.list_blobs(
