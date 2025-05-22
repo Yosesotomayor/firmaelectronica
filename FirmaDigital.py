@@ -182,7 +182,6 @@ def identificar_firmante(file_bytes, firma_base64):
         username = user["RowKey"]
         public_key_pem = user["PublicKey"]
         try:
-            st.write(f"Probando firma con: {username}")
             public_key = serialization.load_pem_public_key(public_key_pem.encode())
             public_key.verify(
                 base64.b64decode(firma_base64),
@@ -421,7 +420,7 @@ else:
 
         # === TAB 4: Archivos Firmados ===
         with admin_tabs[3]:
-            st.subheader("📁 Archivos Firmados por Todos los Usuarios")
+            st.subheader("📁 Archivos Firmados")
             all_firmas = []
             try:
                 blob_list = files_container_client.list_blobs(
