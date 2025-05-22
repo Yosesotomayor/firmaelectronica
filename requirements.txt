@@ -3,3 +3,4 @@ cryptography
 pandas
 datetime
 azure-core
+dotenv
