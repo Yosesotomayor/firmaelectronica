@@ -262,8 +262,8 @@ if not st.session_state.logged_in:
         # DEBUGING
         df_usuarios = load_users()
         df_usuarios["password_str"] = df_usuarios["password"].apply(parse_password)
-        st.subheader("📋 Debug - Usuarios desde Azure Table")
-        st.dataframe(df_usuarios)
+        print("📋 Debug - Usuarios desde Azure Table")
+        print(df_usuarios)
         
         st.session_state.role = "IniciarSesion"
         st.markdown("<h2>Iniciar Sesión 🔑</h2>", unsafe_allow_html=True)
