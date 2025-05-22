@@ -51,7 +51,7 @@ def generate_keys(username):
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     ).decode()
-    
+
     return private_pem, public_pem
 
 
@@ -163,10 +163,16 @@ def verificar_firma(file_bytes, firma_base64):
 def guardar_archivo_firmado(username, filename, firma_base64):
     firma_blob_path = f"firmas/{username}/{filename}.firma"
     metadata_blob_path = f"firmas/{username}/{filename}.meta.txt"
-    firma_blob = blob_service_client.get_blob_client(container=FILES_CONTAINER, blob=firma_blob_path)
+    firma_blob = blob_service_client.get_blob_client(
+        container=FILES_CONTAINER, blob=firma_blob_path
+    )
     firma_blob.upload_blob(firma_base64, overwrite=True)
-    metadata_content = f"Usuario: {username}\nArchivo: {filename}\nFecha: {datetime.now()}\n"
-    meta_blob = blob_service_client.get_blob_client(container=FILES_CONTAINER, blob=metadata_blob_path)
+    metadata_content = (
+        f"Usuario: {username}\nArchivo: {filename}\nFecha: {datetime.now()}\n"
+    )
+    meta_blob = blob_service_client.get_blob_client(
+        container=FILES_CONTAINER, blob=metadata_blob_path
+    )
     meta_blob.upload_blob(metadata_content, overwrite=True)
 
 
@@ -240,6 +246,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+
 # === Aux password=== #
 def parse_password(raw):
     if isinstance(raw, str):
@@ -255,6 +262,7 @@ def parse_password(raw):
     else:
         return "❌ Tipo no compatible"
 
+
 # === MENU PRINCIPAL ===
 if not st.session_state.logged_in:
     tabs = st.tabs(["Iniciar Sesión", "Crear Cuenta"])
@@ -265,13 +273,13 @@ if not st.session_state.logged_in:
         df_usuarios["password_str"] = df_usuarios["password"].apply(parse_password)
         st.subheader("📋 Debug - Usuarios desde Azure Table")
         st.dataframe(df_usuarios)
-        
+
         st.session_state.role = "IniciarSesion"
         st.markdown("<h2>Iniciar Sesión 🔑</h2>", unsafe_allow_html=True)
 
         login_user = st.text_input("Nombre de Usuario", key="login_user")
         login_pass = st.text_input("Contraseña", type="password", key="login_pass")
-        
+
         if st.button("Iniciar Sesión"):
             if verify_user(login_user, login_pass):
                 st.session_state.logged_in = True
@@ -339,14 +347,15 @@ else:
             df_users = load_users()
             df_users = df_users.drop(columns=["password"])
             st.dataframe(df_users, use_container_width=True)
-            
 
         # === TAB 2: Archivos Firmados ===
         with admin_tabs[1]:
             st.subheader("📁 Archivos Firmados por Todos los Usuarios")
             all_firmas = []
             try:
-                blob_list = files_container_client.list_blobs(name_starts_with="firmas/")
+                blob_list = files_container_client.list_blobs(
+                    name_starts_with="firmas/"
+                )
                 for blob in blob_list:
                     if blob.name.endswith(".firma"):
                         parts = blob.name.split("/")
@@ -372,16 +381,22 @@ else:
                 claves_priv = []
 
                 for user in users:
-                    claves_pub.append({
-                        "Usuario": user["RowKey"],
-                        "Clave Pública (Inicio)": user["PublicKey"][:100] + "..."
-                    })
-                    claves_priv.append({
-                        "Usuario": user["RowKey"],
-                        "Clave Privada (Inicio)": user["PrivateKey"][:100] + "..."
-                    })
+                    claves_pub.append(
+                        {
+                            "Usuario": user["RowKey"],
+                            "Clave Pública (Inicio)": user["PublicKey"][:100] + "...",
+                        }
+                    )
+                    claves_priv.append(
+                        {
+                            "Usuario": user["RowKey"],
+                            "Clave Privada (Inicio)": user["PrivateKey"][:100] + "...",
+                        }
+                    )
 
-                tab_pub, tab_priv = st.tabs(["🔓 Claves Públicas", "🔒 Claves Privadas"])
+                tab_pub, tab_priv = st.tabs(
+                    ["🔓 Claves Públicas", "🔒 Claves Privadas"]
+                )
 
                 with tab_pub:
                     st.dataframe(pd.DataFrame(claves_pub), use_container_width=True)
@@ -395,41 +410,51 @@ else:
         # === TAB 4: Accesos por Día ===
         with admin_tabs[3]:
             st.subheader("📈 Accesos por Día")
-            access_df = pd.read_csv(ACCESS_LOG)
-            access_df["timestamp"] = pd.to_datetime(access_df["timestamp"])
-            access_df["date"] = access_df[
-                "timestamp"
-            ].dt.date  # Solo la fecha (sin hora)
-
-            # Agrupar por fecha y contar accesos
-            daily_counts = access_df.groupby("date")["username"].count().reset_index()
-            daily_counts.columns = ["Fecha", "Accesos"]
-
-            # Crear gráfico de líneas
-            import plotly.express as px
-
-            fig = px.line(
-                daily_counts,
-                x="Fecha",
-                y="Accesos",
-                title="Accesos por Día",
-                markers=True,
-            )
-            st.plotly_chart(fig)
-        with admin_tabs[4]:
-            st.subheader("📄 Código Fuente de esta Aplicación")
 
             try:
-                with open(__file__, "r", encoding="utf-8") as f:
-                    codigo = f.read()
-                with st.expander(
-                    "Ver código completo de FirmaDigital.py", expanded=False
-                ):
-                    st.code(codigo, language="python")
-            except Exception:
-                st.warning(
-                    "⚠️ No se pudo cargar el archivo fuente. Esto puede ocurrir si estás usando un entorno como Streamlit Cloud o ejecutando desde IPython."
+                access_entities = acces_table.query_entities("PartitionKey eq 'acceso'")
+                access_data = []
+
+                for entry in access_entities:
+                    access_data.append({
+                        "username": entry["RowKey"],
+                        "timestamp": pd.to_datetime(entry["FechaAcceso"])
+                    })
+
+                access_df = pd.DataFrame(access_data)
+                access_df["date"] = access_df["timestamp"].dt.date
+
+                daily_counts = access_df.groupby("date")["username"].count().reset_index()
+                daily_counts.columns = ["Fecha", "Accesos"]
+
+                import plotly.express as px
+
+                fig = px.line(
+                    daily_counts,
+                    x="Fecha",
+                    y="Accesos",
+                    title="Accesos por Día",
+                    markers=True,
                 )
+                st.plotly_chart(fig)
+
+            except Exception as e:
+                st.error(f"No se pudo cargar el historial de accesos desde Azure: {e}")
+
+                with admin_tabs[4]:
+                    st.subheader("📄 Código Fuente de esta Aplicación")
+
+                    try:
+                        with open(__file__, "r", encoding="utf-8") as f:
+                            codigo = f.read()
+                        with st.expander(
+                            "Ver código completo de FirmaDigital.py", expanded=False
+                        ):
+                            st.code(codigo, language="python")
+                    except Exception:
+                        st.warning(
+                            "⚠️ No se pudo cargar el archivo fuente. Esto puede ocurrir si estás usando un entorno como Streamlit Cloud o ejecutando desde IPython."
+                        )
 
     else:
 
@@ -456,7 +481,9 @@ else:
 
                 if firmante:
                     try:
-                        guardar_archivo_firmado(firmante, original_file.name, signature_b64)
+                        guardar_archivo_firmado(
+                            firmante, original_file.name, signature_b64
+                        )
                     except Exception as e:
                         st.error(f"Error al guardar el archivo firmado: {e}")
                         st.stop()
