@@ -8,3 +8,4 @@ azure-storage-blob
 pybase64
 streamlit
 plotly
+plotly-express
