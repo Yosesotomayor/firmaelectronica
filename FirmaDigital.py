@@ -20,7 +20,7 @@ AZURE_CONNECTION_STRING = os.getenv("AZURE_CONNECTION_STRING")
 FILES_CONATAINER = os.getenv("FILES_CONTAINER")
 
 table_service = TableServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
-USERS_TABLE = table_service.get_table_client(table_name="usersfirmaelectronica")
+USERS_TABLE = table_service.get_table_client(table_name="USERS_CONTAINER")
 
 
 # === CONFIGURACIÓN INICIAL DE CARPETAS ===
