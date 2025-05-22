@@ -336,6 +336,7 @@ else:
                 "📋 Usuarios Registrados",
                 "📂 Firmar Archivos",
                 "📁 Archivos Firmados",
+                "🔍 Verificar Firma",
                 "🔐 Claves Públicas/Privadas",
                 "📈 Gráfico de Accesos",
                 "📄 Código de la Página",
@@ -366,9 +367,40 @@ else:
                     file_name=f"{uploaded_file.name}.firma",
                     mime="text/plain"
                 )
-
         # === TAB 3: Archivos Firmados ===
         with admin_tabs[2]:
+            st.subheader("Verificar Firma ✅")
+            original_file = st.file_uploader(
+                "Sube el archivo original", key="file_original"
+            )
+            signature_file = st.file_uploader(
+                "Sube el archivo .firma", key="file_signature"
+            )
+
+            if original_file and signature_file:
+                original_bytes = original_file.read()
+                signature_b64 = signature_file.read().decode()
+
+                firmante = identificar_firmante(original_bytes, signature_b64)
+
+                if firmante:
+                    try:
+                        guardar_archivo_firmado(
+                            firmante, original_file.name, signature_b64
+                        )
+                    except Exception as e:
+                        st.error(f"Error al guardar el archivo firmado: {e}")
+                        st.stop()
+                    st.success(
+                        f"Firma válida. Documento firmado por: **{firmante}** ✅"
+                    )
+                else:
+                    st.error(
+                        "La firma NO es válida o no se pudo identificar al firmante ❌"
+                    )
+                    
+        # === TAB 4: Archivos Firmados ===
+        with admin_tabs[3]:
             st.subheader("📁 Archivos Firmados por Todos los Usuarios")
             all_firmas = []
             try:
@@ -390,8 +422,8 @@ else:
             else:
                 st.info("No hay archivos firmados todavía.")
 
-        # === TAB 4: Carpetas de Claves ===
-        with admin_tabs[3]:
+        # === TAB 5: Carpetas de Claves ===
+        with admin_tabs[4]:
             st.subheader("🔐 Claves Públicas y Privadas desde Azure")
 
             try:
@@ -426,8 +458,8 @@ else:
             except Exception as e:
                 st.error(f"No se pudieron cargar las claves desde Azure: {e}")
 
-        # === TAB 5: Accesos por Día ===
-        with admin_tabs[4]:
+        # === TAB 6: Accesos por Día ===
+        with admin_tabs[5]:
             st.subheader("📈 Accesos por Día")
 
             try:
@@ -460,7 +492,8 @@ else:
             except Exception as e:
                 st.error(f"No se pudo cargar el historial de accesos desde Azure: {e}")
 
-        with admin_tabs[4]:
+        # === TAB 7: Código Fuente ===
+        with admin_tabs[6]:
             st.subheader("📄 Código Fuente de esta Aplicación")
 
             try:
