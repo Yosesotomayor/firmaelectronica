@@ -300,15 +300,13 @@ if not st.session_state.logged_in:
             if new_pass != new_pass_confirm:
                 st.error("Las contraseñas no coinciden ❌")
             elif user_exists(new_user):
-                st.error(new_user)
-                st.error("El nombre de usuario ya está registrado ❌XXXX")
                 st.warning("El nombre de usuario ya está registrado ⚠️")
             else:
                 st.success("Las contraseñas coinciden ✅")
                 if st.button("Crear Cuenta"):
                     hashed_password = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
                     insert_user(new_user, hashed_password)
-                    st.rerun()
+                    st.experimental_rerun()
 
 # === MENU DE PERFIL ===
 else:
