@@ -90,7 +90,7 @@ def load_users():
 
 def user_exists(username):
     df = load_users()
-    st.write(username for username in df["username"].values)
+    st.write(username for username in df["username"].values, "EXISTE")
     return username in df["username"].values
 
 
@@ -299,6 +299,7 @@ if not st.session_state.logged_in:
             if new_pass != new_pass_confirm:
                 st.error("Las contraseñas no coinciden ❌")
             elif user_exists(new_user):
+                st.error(new_user, "ya existe ❌")
                 st.warning("El nombre de usuario ya está registrado ⚠️")
             else:
                 st.success("Las contraseñas coinciden ✅")
