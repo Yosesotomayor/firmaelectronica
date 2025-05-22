@@ -3,7 +3,6 @@ cryptography
 pandas
 datetime
 azure-core
-dotenv
 azure-data-tables
 azure-storage-blob
-base64
+pybase64
