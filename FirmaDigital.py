@@ -14,7 +14,10 @@ from PIL import Image
 
 st.set_page_config(page_title="Firma Digital", layout="wide", page_icon="🔐")
 
-load_dotenv(dotenv_path="/Users/yosesotomayor/Firma/firmaelectronica/.env")
+if os.path.exists(".env"):
+    load_dotenv(dotenv_path="/Users/yosesotomayor/Firma/firmaelectronica/.env")
+else:
+    st.error("El archivo .env no existe. Revisa tu carpeta.")
 
 AZURE_CONNECTION_STRING = os.getenv("AZURE_CONNECTION_STRING")
 
