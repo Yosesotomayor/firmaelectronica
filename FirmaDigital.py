@@ -455,7 +455,7 @@ else:
                                 firma_blob.delete_blob()
                                 meta_blob.delete_blob()
                                 st.success(f"Archivo '{row['Archivo']}' eliminado correctamente.")
-                                st.experimental_rerun()
+                                st.rerun()
                             except Exception as e:
                                 st.error(f"No se pudo eliminar el archivo: {e}")
             else:
