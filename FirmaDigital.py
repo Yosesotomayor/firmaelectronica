@@ -371,8 +371,13 @@ else:
             uploaded_file = st.file_uploader(
                 "Selecciona un archivo para firmar", key="file_firma"
             )
-            usuario_objetivo = st.selectbox("Selecciona al usuario para quien firmas el documento:", options=[u["RowKey"] for u in users_table.query_entities("PartitionKey eq 'usuario'") if u["RowKey"] != "Admin"])
-            
+            usuarios = ["(Firma autónoma - Admin)"] + [
+                u["RowKey"] for u in users_table.query_entities("PartitionKey eq 'usuario'")
+                if u["RowKey"] != "Admin"
+            ]
+
+            usuario_objetivo = st.selectbox("Selecciona el destinatario del documento firmado:", usuarios)
+                    
             if uploaded_file:
                 file_bytes = uploaded_file.read()
                 firma_base64 = firmar_archivo(file_bytes)
