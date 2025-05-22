@@ -345,17 +345,18 @@ else:
         with admin_tabs[1]:
             st.subheader("📁 Archivos Firmados por Todos los Usuarios")
             all_firmas = []
-            for user_folder in os.listdir(SIGNED_FOLDER):
-                user_path = os.path.join(SIGNED_FOLDER, user_folder)
-                if os.path.isdir(user_path):
-                    for file in os.listdir(user_path):
-                        if file.endswith(".firma"):
-                            all_firmas.append(
-                                {
-                                    "Usuario": user_folder,
-                                    "Archivo": file.replace(".firma", ""),
-                                }
-                            )
+            try:
+                blob_list = files_container_client.list_blobs(name_starts_with="firmas/")
+                for blob in blob_list:
+                    if blob.name.endswith(".firma"):
+                        parts = blob.name.split("/")
+                        if len(parts) == 3:
+                            usuario = parts[1]
+                            archivo = parts[2].replace(".firma", "")
+                            all_firmas.append({"Usuario": usuario, "Archivo": archivo})
+            except Exception as e:
+                st.error(f"Error al recuperar archivos firmados desde Azure: {e}")
+
             if all_firmas:
                 st.dataframe(pd.DataFrame(all_firmas))
             else:
