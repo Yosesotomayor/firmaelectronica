@@ -423,10 +423,9 @@ else:
         with admin_tabs[3]:
             st.subheader("📁 Archivos Firmados")
             all_firmas = []
+
             try:
-                blob_list = files_container_client.list_blobs(
-                    name_starts_with="firmas/"
-                )
+                blob_list = files_container_client.list_blobs(name_starts_with="firmas/")
                 for blob in blob_list:
                     if blob.name.endswith(".firma"):
                         parts = blob.name.split("/")
@@ -438,7 +437,27 @@ else:
                 st.error(f"Error al recuperar archivos firmados desde Azure: {e}")
 
             if all_firmas:
-                st.dataframe(pd.DataFrame(all_firmas))
+                df = pd.DataFrame(all_firmas)
+
+                for i, row in df.iterrows():
+                    col1, col2 = st.columns([6, 1])
+                    with col1:
+                        st.markdown(f"**📄 {row['Archivo']}** — Propietario: `{row['Usuario']}`")
+                    with col2:
+                        if st.button("🗑 Eliminar", key=f"del_{row['Usuario']}_{row['Archivo']}"):
+                            try:
+                                firma_blob = files_container_client.get_blob_client(
+                                    f"firmas/{row['Usuario']}/{row['Archivo']}.firma"
+                                )
+                                meta_blob = files_container_client.get_blob_client(
+                                    f"firmas/{row['Usuario']}/{row['Archivo']}.meta.txt"
+                                )
+                                firma_blob.delete_blob()
+                                meta_blob.delete_blob()
+                                st.success(f"Archivo '{row['Archivo']}' eliminado correctamente.")
+                                st.experimental_rerun()
+                            except Exception as e:
+                                st.error(f"No se pudo eliminar el archivo: {e}")
             else:
                 st.info("No hay archivos firmados todavía.")
 
