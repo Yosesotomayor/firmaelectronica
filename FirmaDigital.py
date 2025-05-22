@@ -18,6 +18,14 @@ USERS_CONTAINER = st.secrets["USERS_CONTAINER"]
 FILES_CONTAINER = st.secrets["FILES_CONTAINER"]
 
 
+table_service = TableServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
+users_table = table_service.get_table_client(table_name=USERS_CONTAINER)
+blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
+files_container_client = blob_service_client.get_container_client(FILES_CONTAINER)
+st.write("USERS_CONTAINER:", USERS_CONTAINER)
+st.write("FILES_CONTAINER:", FILES_CONTAINER)
+st.write("Conexión establecida correctamente ✅")
+
 # === CONFIGURACIÓN INICIAL DE CARPETAS ===
 PUBLIC_KEY_FOLDER = "Public_Key_folder"
 PRIVATE_KEY_FOLDER = "Private_Key_folder"
