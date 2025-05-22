@@ -441,20 +441,20 @@ else:
             except Exception as e:
                 st.error(f"No se pudo cargar el historial de accesos desde Azure: {e}")
 
-                with admin_tabs[4]:
-                    st.subheader("📄 Código Fuente de esta Aplicación")
+        with admin_tabs[4]:
+            st.subheader("📄 Código Fuente de esta Aplicación")
 
-                    try:
-                        with open(__file__, "r", encoding="utf-8") as f:
-                            codigo = f.read()
-                        with st.expander(
-                            "Ver código completo de FirmaDigital.py", expanded=False
-                        ):
-                            st.code(codigo, language="python")
-                    except Exception:
-                        st.warning(
-                            "⚠️ No se pudo cargar el archivo fuente. Esto puede ocurrir si estás usando un entorno como Streamlit Cloud o ejecutando desde IPython."
-                        )
+            try:
+                with open(__file__, "r", encoding="utf-8") as f:
+                    codigo = f.read()
+                with st.expander(
+                    "Ver código completo de FirmaDigital.py", expanded=False
+                ):
+                    st.code(codigo, language="python")
+            except Exception:
+                st.warning(
+                    "⚠️ No se pudo cargar el archivo fuente. Esto puede ocurrir si estás usando un entorno como Streamlit Cloud o ejecutando desde IPython."
+                )
 
     else:
 
