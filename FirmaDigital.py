@@ -161,27 +161,26 @@ def guardar_archivo_firmado(username, filename, firma_base64):
 
 
 def identificar_firmante(file_bytes, firma_base64):
-    for user_file in os.listdir(PUBLIC_KEY_FOLDER):
-        if user_file.endswith("_clave_publica.pem"):
-            username = user_file.replace("_clave_publica.pem", "")
-            path = os.path.join(PUBLIC_KEY_FOLDER, user_file)
-            with open(path, "rb") as f:
-                try:
-                    public_key = serialization.load_pem_public_key(f.read())
-                    public_key.verify(
-                        base64.b64decode(firma_base64),
-                        file_bytes,
-                        padding.PSS(
-                            mgf=padding.MGF1(hashes.SHA256()),
-                            salt_length=padding.PSS.MAX_LENGTH,
-                        ),
-                        hashes.SHA256(),
-                    )
-                    return username
-                except InvalidSignature:
-                    continue
-                except Exception:
-                    continue
+    users = users_table.query_entities("PartitionKey eq 'usuario'")
+    for user in users:
+        username = user["RowKey"]
+        public_key_pem = user["PublicKey"]
+        try:
+            public_key = serialization.load_pem_public_key(public_key_pem.encode())
+            public_key.verify(
+                base64.b64decode(firma_base64),
+                file_bytes,
+                padding.PSS(
+                    mgf=padding.MGF1(hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH,
+                ),
+                hashes.SHA256(),
+            )
+            return username
+        except InvalidSignature:
+            continue
+        except Exception:
+            continue
     return None
 
 
