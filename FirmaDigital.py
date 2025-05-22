@@ -349,6 +349,7 @@ else:
                 with col1:
                     st.markdown(f"**👤 Usuario:** {username}")
                 with col2:
+                    st.write(username)
                     if username != "Admin":
                         if st.button("Eliminar", key=f"delete_{username}"):
                             try:
