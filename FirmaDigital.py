@@ -63,7 +63,6 @@ def insert_user(username, password):
         "PublicKey": public_key,
         "FechaCreacion": datetime.utcnow().isoformat()
     })
-    users_table.commit_transaction()
 
 def insert_access_log(username):
     acces_table.upsert_entity(
@@ -73,7 +72,6 @@ def insert_access_log(username):
             "FechaAcceso": datetime.utcnow().isoformat(),
         }
     )
-    acces_table.commit_transaction()
 
 def load_users():
     users = users_table.query_entities("PartitionKey eq 'usuario'")
