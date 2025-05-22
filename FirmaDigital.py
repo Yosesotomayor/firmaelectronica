@@ -518,7 +518,7 @@ else:
                                 "RowKey": st.session_state.current_user,
                                 "Password": new_hashed,
                             },
-                            mode="Merge"
+                            mode="Replace"
                         )
                         st.success("Contraseña actualizada correctamente ✅")
                     except Exception as e:
