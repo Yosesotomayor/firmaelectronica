@@ -92,7 +92,9 @@ def verify_user(username, password):
     if not user.empty:
         # debug
         st.write(f"Contraseña almacenada: {user.iloc[0]['password']}")
-        hashed = user.iloc[0]["password"].encode()
+        stored = user.iloc[0]["password"]
+        hashed = stored if isinstance(stored, bytes) else stored.encode()
+        
         return bcrypt.checkpw(password.encode(), hashed)
     return False
 
