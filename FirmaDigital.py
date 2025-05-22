@@ -10,14 +10,18 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.exceptions import InvalidSignature
 from datetime import datetime
+from azure.data.tables import TableServiceClient
 from PIL import Image
 
 st.set_page_config(page_title="Firma Digital", layout="wide", page_icon="🔐")
 
 load_dotenv(dotenv_path=".env")
+
 AZURE_CONNECTION_STRING = os.getenv("AZURE_CONNECTION_STRING")
-USERS_CONTAINER = os.getenv("USERS_CONTAINER")
 FILES_CONATAINER = os.getenv("FILES_CONTAINER")
+
+table_service = TableServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
+USERS_TABLE = table_service.get_table_client(table_name="usersfirmaelectronica")
 
 
 # === CONFIGURACIÓN INICIAL DE CARPETAS ===
