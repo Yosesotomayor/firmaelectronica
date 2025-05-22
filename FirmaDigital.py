@@ -168,7 +168,7 @@ def guardar_archivo_firmado(username, filename, firma_base64):
     )
     firma_blob.upload_blob(firma_base64, overwrite=True)
     metadata_content = (
-        f"Usuario: {username}\nArchivo: {filename}\nFecha: {datetime.now()}\n"
+        f"Usuario dueño: {username}\nFirmado por: {st.session_state.current_user}\nArchivo: {filename}\nFecha: {datetime.now()}\n"
     )
     meta_blob = blob_service_client.get_blob_client(
         container=FILES_CONTAINER, blob=metadata_blob_path
@@ -368,17 +368,18 @@ else:
         # === TAB 2: Firmar Archivos ===
         with admin_tabs[1]:
             st.subheader("Firma de Archivo 📁")
+            
             uploaded_file = st.file_uploader(
                 "Selecciona un archivo para firmar", key="file_firma"
             )
+            usuario_objetivo = st.selectbox("Selecciona al usuario para quien firmas el documento:", options=[u["RowKey"] for u in users_table.query_entities("PartitionKey eq 'usuario'") if u["RowKey"] != "Admin"])
+            
             if uploaded_file:
                 file_bytes = uploaded_file.read()
                 firma_base64 = firmar_archivo(file_bytes)
                 st.text_area("Firma generada (Base64):", value=firma_base64, height=150)
 
-                guardar_archivo_firmado(
-                    st.session_state.current_user, uploaded_file.name, firma_base64
-                )
+                guardar_archivo_firmado(usuario_objetivo, uploaded_file.name, firma_base64)
 
                 st.download_button(
                     label="Descargar archivo .firma 📥",
@@ -596,37 +597,24 @@ else:
                         "La firma NO es válida o no se pudo identificar al firmante ❌"
                     )
 
-        # === Verificar Firmas ===
+        # === Checar mis archivos firmados ===
         with signed_tabs[1]:
-            st.subheader("Verificar Firma ✅")
-            original_file = st.file_uploader(
-                "Sube el archivo original", key="file_original_user"
-            )
-            signature_file = st.file_uploader(
-                "Sube el archivo .firma", key="file_signature_user"
-            )
+            st.subheader("📁 Mis Archivos Firmados")
 
-            if original_file and signature_file:
-                original_bytes = original_file.read()
-                signature_b64 = signature_file.read().decode()
+            archivos_usuario = []
+            try:
+                blob_list = files_container_client.list_blobs(name_starts_with=f"firmas/{st.session_state.current_user}/")
+                for blob in blob_list:
+                    if blob.name.endswith(".firma"):
+                        archivo = blob.name.split("/")[-1].replace(".firma", "")
+                        archivos_usuario.append({"Archivo": archivo})
+            except Exception as e:
+                st.error(f"Error al obtener archivos firmados: {e}")
 
-                firmante = identificar_firmante(original_bytes, signature_b64)
-
-                if firmante:
-                    try:
-                        guardar_archivo_firmado(
-                            firmante, original_file.name, signature_b64
-                        )
-                    except Exception as e:
-                        st.error(f"Error al guardar el archivo firmado: {e}")
-                        st.stop()
-                    st.success(
-                        f"Firma válida. Documento firmado por: **{firmante}** ✅"
-                    )
-                else:
-                    st.error(
-                        "La firma NO es válida o no se pudo identificar al firmante ❌"
-                    )
+            if archivos_usuario:
+                st.dataframe(pd.DataFrame(archivos_usuario))
+            else:
+                st.info("No tienes archivos firmados todavía.")
 
 # Pie de página con HTML y CSS embebido
 footer = """
