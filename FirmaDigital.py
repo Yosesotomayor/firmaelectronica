@@ -336,7 +336,6 @@ else:
                 "📂 Firmar Archivos",
                 "🔍 Verificar Firma",
                 "📁 Archivos Firmados",
-                "🔐 Claves Públicas/Privadas",
                 "📈 Gráfico de Accesos",
                 "🔑 Cambiar Contraseña",
                 "📄 Código de la Página",
@@ -461,44 +460,8 @@ else:
             else:
                 st.info("No hay archivos firmados todavía.")
 
-        # === TAB 5: Carpetas de Claves ===
+        # === TAB 5: Accesos por Día ===
         with admin_tabs[4]:
-            st.subheader("🔐 Claves Públicas y Privadas desde Azure")
-
-            try:
-                users = users_table.query_entities("PartitionKey eq 'usuario'")
-                claves_pub = []
-                claves_priv = []
-
-                for user in users:
-                    claves_pub.append(
-                        {
-                            "Usuario": user["RowKey"],
-                            "Clave Pública (Inicio)": user["PublicKey"][:100] + "...",
-                        }
-                    )
-                    claves_priv.append(
-                        {
-                            "Usuario": user["RowKey"],
-                            "Clave Privada (Inicio)": user["PrivateKey"][:100] + "...",
-                        }
-                    )
-
-                tab_pub, tab_priv = st.tabs(
-                    ["🔓 Claves Públicas", "🔒 Claves Privadas"]
-                )
-
-                with tab_pub:
-                    st.dataframe(pd.DataFrame(claves_pub), use_container_width=True)
-
-                with tab_priv:
-                    st.dataframe(pd.DataFrame(claves_priv), use_container_width=True)
-
-            except Exception as e:
-                st.error(f"No se pudieron cargar las claves desde Azure: {e}")
-
-        # === TAB 6: Accesos por Día ===
-        with admin_tabs[5]:
             st.subheader("📈 Accesos por Día")
 
             try:
@@ -533,8 +496,8 @@ else:
             except Exception as e:
                 st.error(f"No se pudo cargar el historial de accesos desde Azure: {e}")
 
-        # === TAB 7:  CAMBIAR CONTRASEÑA ===
-        with admin_tabs[6]:
+        # === TAB 6:  CAMBIAR CONTRASEÑA ===
+        with admin_tabs[5]:
             st.subheader("🔑 Cambiar Contraseña")
 
             old_pass = st.text_input("Contraseña actual", type="password", key="old_pass")
@@ -561,8 +524,8 @@ else:
                     except Exception as e:
                         st.error(f"No se pudo actualizar la contraseña: {e}")
 
-        # === TAB 8: Código Fuente ===
-        with admin_tabs[7]:
+        # === TAB 7: Código Fuente ===
+        with admin_tabs[6]:
             st.subheader("📄 Código Fuente de esta Aplicación")
 
             try:
@@ -581,7 +544,7 @@ else:
 
         # === TABS PARA USUARIOS REGULARES ===
         signed_tabs = st.tabs(
-            ["Verificar Firma ✅", "Visualizar Archivos Verificados 📁"]
+            ["Verificar Firma ✅", "Visualizar Archivos Verificados por el Administrador 📁"]
         )
 
         # === Verificar Firma ===
@@ -616,7 +579,7 @@ else:
                         "La firma NO es válida o no se pudo identificar al firmante ❌"
                     )
 
-        # === Checar mis archivos firmados ===
+        # === Checar mis archivos firmados por el administrador ===
         with signed_tabs[1]:
             st.subheader("📁 Mis Archivos Firmados")
 
