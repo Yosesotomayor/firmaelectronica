@@ -90,6 +90,7 @@ def load_users():
 
 def user_exists(username):
     df = load_users()
+    st.write(username for username in df["username"].values)
     return username in df["username"].values
 
 
