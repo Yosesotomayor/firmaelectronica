@@ -353,7 +353,6 @@ else:
                 with col1:
                     st.markdown(f"**👤 Usuario:** {username}")
                 with col2:
-                    st.write(username)
                     if username != "Admin":
                         if st.button("Eliminar", key=f"delete_{username}"):
                             try:
@@ -363,7 +362,7 @@ else:
                             except Exception as e:
                                 st.error(f"No se pudo eliminar el usuario: {e}")
                     else:
-                        st.info("Cuenta protegida")
+                        pass
                 
         # === TAB 2: Firmar Archivos ===
         with admin_tabs[1]:
