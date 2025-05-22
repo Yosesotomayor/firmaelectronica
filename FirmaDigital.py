@@ -182,7 +182,6 @@ def identificar_firmante(file_bytes, firma_base64):
         username = user["RowKey"]
         public_key_pem = user["PublicKey"]
         try:
-            st.write(f"Probando firma con: {username}")
             public_key = serialization.load_pem_public_key(public_key_pem.encode())
             public_key.verify(
                 base64.b64decode(firma_base64),
@@ -195,10 +194,8 @@ def identificar_firmante(file_bytes, firma_base64):
             )
             return username
         except InvalidSignature:
-            st.info(f"Firma inválida con {username}")
             continue
-        except Exception as e:
-            st.error(f"{username} falló por: {e}")
+        except Exception:
             continue
     return None
 
