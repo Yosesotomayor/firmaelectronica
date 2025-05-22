@@ -4,7 +4,6 @@ import pandas as pd
 import bcrypt
 import os
 from azure.storage.blob import BlobServiceClient
-from dotenv import load_dotenv
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.exceptions import InvalidSignature
@@ -14,21 +13,9 @@ from PIL import Image
 
 st.set_page_config(page_title="Firma Digital", layout="wide", page_icon="🔐")
 
-if os.path.exists(".env"):
-    load_dotenv(dotenv_path="/Users/yosesotomayor/Firma/firmaelectronica/.env")
-else:
-    st.error("El archivo .env no existe. Revisa tu carpeta.")
-
-AZURE_CONNECTION_STRING = os.getenv("AZURE_CONNECTION_STRING")
-
-st.write("AZURE_CONNECTION_STRING:", AZURE_CONNECTION_STRING)
-if AZURE_CONNECTION_STRING is None:
-    st.error("AZURE_CONNECTION_STRING no está definida. Revisa tu archivo .env.")
-    
-FILES_CONATAINER = os.getenv("FILES_CONTAINER")
-
-table_service = TableServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
-USERS_TABLE = table_service.get_table_client(table_name="USERS_CONTAINER")
+AZURE_CONNECTION_STRING = st.secrets["AZURE_CONNECTION_STRING"]
+USERS_CONTAINER = st.secrets["USERS_CONTAINER"]
+FILES_CONTAINER = st.secrets["FILES_CONTAINER"]
 
 
 # === CONFIGURACIÓN INICIAL DE CARPETAS ===
