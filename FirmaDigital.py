@@ -14,7 +14,7 @@ from PIL import Image
 
 st.set_page_config(page_title="Firma Digital", layout="wide", page_icon="🔐")
 
-load_dotenv(dotenv_path=".env")
+load_dotenv(dotenv_path="/Users/yosesotomayor/Firma/firmaelectronica/.env")
 
 AZURE_CONNECTION_STRING = os.getenv("AZURE_CONNECTION_STRING")
 
