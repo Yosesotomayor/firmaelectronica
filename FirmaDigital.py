@@ -97,7 +97,18 @@ def verify_user(username, password):
     user = df[df["username"] == username]
     if not user.empty:
         stored = user.iloc[0]["password"]
-        hashed = stored if isinstance(stored, bytes) else stored.encode()
+        if isinstance(stored, str) and "," in stored:
+            try:
+                hashed = bytes(map(int, stored.split(",")))
+            except Exception:
+                return False
+        elif isinstance(stored, bytes):
+            hashed = stored
+        else:
+            try:
+                hashed = stored.encode()
+            except Exception:
+                return False
 
         return bcrypt.checkpw(password.encode(), hashed)
     return False
@@ -248,15 +259,18 @@ if not st.session_state.logged_in:
     tabs = st.tabs(["Iniciar Sesión", "Crear Cuenta"])
     # === INICIAR SESIÓN ===
     with tabs[0]:
+        # DEBUGING
         df_usuarios = load_users()
         df_usuarios["password_str"] = df_usuarios["password"].apply(parse_password)
         st.subheader("📋 Debug - Usuarios desde Azure Table")
         st.dataframe(df_usuarios)
+        
         st.session_state.role = "IniciarSesion"
         st.markdown("<h2>Iniciar Sesión 🔑</h2>", unsafe_allow_html=True)
 
         login_user = st.text_input("Nombre de Usuario", key="login_user")
         login_pass = st.text_input("Contraseña", type="password", key="login_pass")
+        
         if st.button("Iniciar Sesión"):
             if verify_user(login_user, login_pass):
                 st.session_state.logged_in = True
