@@ -334,6 +334,7 @@ else:
         admin_tabs = st.tabs(
             [
                 "📋 Usuarios Registrados",
+                "📂 Firmar Archivos",
                 "📁 Archivos Firmados",
                 "🔐 Claves Públicas/Privadas",
                 "📈 Gráfico de Accesos",
@@ -347,9 +348,27 @@ else:
             df_users = load_users()
             df_users = df_users.drop(columns=["password"])
             st.dataframe(df_users, use_container_width=True)
-
-        # === TAB 2: Archivos Firmados ===
+        
+        # === TAB 2: Firmar Archivos ===
         with admin_tabs[1]:
+            st.subheader("Firma de Archivo 📁")
+            uploaded_file = st.file_uploader("Selecciona un archivo para firmar", key="file_firma")
+            if uploaded_file:
+                file_bytes = uploaded_file.read()
+                firma_base64 = firmar_archivo(file_bytes)
+                st.text_area("Firma generada (Base64):", value=firma_base64, height=150)
+
+                guardar_archivo_firmado(st.session_state.current_user, uploaded_file.name, firma_base64)
+
+                st.download_button(
+                    label="Descargar archivo .firma 📥",
+                    data=firma_base64,
+                    file_name=f"{uploaded_file.name}.firma",
+                    mime="text/plain"
+                )
+
+        # === TAB 3: Archivos Firmados ===
+        with admin_tabs[2]:
             st.subheader("📁 Archivos Firmados por Todos los Usuarios")
             all_firmas = []
             try:
@@ -371,8 +390,8 @@ else:
             else:
                 st.info("No hay archivos firmados todavía.")
 
-        # === TAB 3: Carpetas de Claves ===
-        with admin_tabs[2]:
+        # === TAB 4: Carpetas de Claves ===
+        with admin_tabs[3]:
             st.subheader("🔐 Claves Públicas y Privadas desde Azure")
 
             try:
@@ -407,8 +426,8 @@ else:
             except Exception as e:
                 st.error(f"No se pudieron cargar las claves desde Azure: {e}")
 
-        # === TAB 4: Accesos por Día ===
-        with admin_tabs[3]:
+        # === TAB 5: Accesos por Día ===
+        with admin_tabs[4]:
             st.subheader("📈 Accesos por Día")
 
             try:
