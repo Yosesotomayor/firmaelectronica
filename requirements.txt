@@ -3,5 +3,3 @@ cryptography
 pandas
 datetime
 azure-core
-azure-storage-blob
-azure-data-tables
