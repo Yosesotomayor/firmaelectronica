@@ -9,3 +9,6 @@ pybase64
 streamlit
 plotly
 plotly-express
+pypdf2
+reportlab
+io

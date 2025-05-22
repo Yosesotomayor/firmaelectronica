@@ -13,6 +13,13 @@ from azure.data.tables import TableServiceClient
 from PIL import Image
 import plotly.express as px
 
+
+from PyPDF2 import PdfReader, PdfWriter
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.utils import ImageReader
+from io import BytesIO
+
 st.set_page_config(page_title="Firma Digital", layout="wide", page_icon="🔐")
 
 AZURE_CONNECTION_STRING = st.secrets["AZURE_CONNECTION_STRING"]
@@ -36,7 +43,7 @@ if "current_user" not in st.session_state:
 
 
 # === FUNCIONES ===
-def generate_keys(username):
+def generate_keys():
     private_key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=2048,
