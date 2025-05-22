@@ -262,8 +262,8 @@ if not st.session_state.logged_in:
         # DEBUGING
         df_usuarios = load_users()
         df_usuarios["password_str"] = df_usuarios["password"].apply(parse_password)
-        print("📋 Debug - Usuarios desde Azure Table")
-        print(df_usuarios)
+        st.subheader("📋 Debug - Usuarios desde Azure Table")
+        st.dataframe(df_usuarios)
         
         st.session_state.role = "IniciarSesion"
         st.markdown("<h2>Iniciar Sesión 🔑</h2>", unsafe_allow_html=True)
@@ -335,11 +335,10 @@ else:
         # === TAB 1: Usuarios Registrados ===
         with admin_tabs[0]:
             st.subheader("📋 Usuarios Registrados")
-            if os.path.exists(USER_FILE):
-                usuarios_df = pd.read_csv(USER_FILE)
-                st.dataframe(usuarios_df)
-            else:
-                st.warning("No hay usuarios registrados.")
+            df_users = load_users()
+            df_users = df_users.drop(columns=["password"])
+            st.dataframe(df_users, use_container_width=True)
+            
 
         # === TAB 2: Archivos Firmados ===
         with admin_tabs[1]:
