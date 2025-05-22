@@ -11,6 +11,7 @@ from cryptography.exceptions import InvalidSignature
 from datetime import datetime
 from azure.data.tables import TableServiceClient
 from PIL import Image
+import plotly.express as px
 
 st.set_page_config(page_title="Firma Digital", layout="wide", page_icon="🔐")
 
@@ -268,12 +269,6 @@ if not st.session_state.logged_in:
     tabs = st.tabs(["Iniciar Sesión", "Crear Cuenta"])
     # === INICIAR SESIÓN ===
     with tabs[0]:
-        # DEBUGING
-        df_usuarios = load_users()
-        df_usuarios["password_str"] = df_usuarios["password"].apply(parse_password)
-        st.subheader("📋 Debug - Usuarios desde Azure Table")
-        st.dataframe(df_usuarios)
-
         st.session_state.role = "IniciarSesion"
         st.markdown("<h2>Iniciar Sesión 🔑</h2>", unsafe_allow_html=True)
 
@@ -346,28 +341,43 @@ else:
         # === TAB 1: Usuarios Registrados ===
         with admin_tabs[0]:
             st.subheader("📋 Usuarios Registrados")
-            df_users = load_users()
-            df_users = df_users.drop(columns=["password"])
-            st.dataframe(df_users, use_container_width=True)
-        
+
+            users = users_table.query_entities("PartitionKey eq 'usuario'")
+            for user in users:
+                col1, col2 = st.columns([5, 1])
+                with col1:
+                    st.markdown(f"**👤 Usuario:** {user['RowKey']}")
+                with col2:
+                    if st.button("Eliminar", key=f"delete_{user['RowKey']}"):
+                        try:
+                            users_table.delete_entity(partition_key="usuario", row_key=user["RowKey"])
+                            st.success(f"Usuario '{user['RowKey']}' eliminado correctamente.")
+                            st.experimental_rerun()
+                        except Exception as e:
+                            st.error(f"No se pudo eliminar el usuario: {e}")
+
         # === TAB 2: Firmar Archivos ===
         with admin_tabs[1]:
             st.subheader("Firma de Archivo 📁")
-            uploaded_file = st.file_uploader("Selecciona un archivo para firmar", key="file_firma")
+            uploaded_file = st.file_uploader(
+                "Selecciona un archivo para firmar", key="file_firma"
+            )
             if uploaded_file:
                 file_bytes = uploaded_file.read()
                 firma_base64 = firmar_archivo(file_bytes)
                 st.text_area("Firma generada (Base64):", value=firma_base64, height=150)
 
-                guardar_archivo_firmado(st.session_state.current_user, uploaded_file.name, firma_base64)
+                guardar_archivo_firmado(
+                    st.session_state.current_user, uploaded_file.name, firma_base64
+                )
 
                 st.download_button(
                     label="Descargar archivo .firma 📥",
                     data=firma_base64,
                     file_name=f"{uploaded_file.name}.firma",
-                    mime="text/plain"
+                    mime="text/plain",
                 )
-        # === TAB 3: Verificar Firma ===
+        # === TAB 3: Verificar Firmas ===
         with admin_tabs[2]:
             st.subheader("Verificar Firma ✅")
             original_file = st.file_uploader(
@@ -398,10 +408,10 @@ else:
                     st.error(
                         "La firma NO es válida o no se pudo identificar al firmante ❌"
                     )
-                    
+
         # === TAB 4: Archivos Firmados ===
         with admin_tabs[3]:
-            st.subheader("📁 Archivos Firmados")
+            st.subheader("📁 Archivos Firmados por Todos los Usuarios")
             all_firmas = []
             try:
                 blob_list = files_container_client.list_blobs(
@@ -467,18 +477,20 @@ else:
                 access_data = []
 
                 for entry in access_entities:
-                    access_data.append({
-                        "username": entry["RowKey"],
-                        "timestamp": pd.to_datetime(entry["FechaAcceso"])
-                    })
+                    access_data.append(
+                        {
+                            "username": entry["RowKey"],
+                            "timestamp": pd.to_datetime(entry["FechaAcceso"]),
+                        }
+                    )
 
                 access_df = pd.DataFrame(access_data)
                 access_df["date"] = access_df["timestamp"].dt.date
 
-                daily_counts = access_df.groupby("date")["username"].count().reset_index()
+                daily_counts = (
+                    access_df.groupby("date")["username"].count().reset_index()
+                )
                 daily_counts.columns = ["Fecha", "Accesos"]
-
-                import plotly.express as px
 
                 fig = px.line(
                     daily_counts,
