@@ -596,25 +596,35 @@ else:
 
         # === Re-descargar Clave Privada ===
         with signed_tabs[1]:
-            st.subheader("Visualizar Archivos Verificados 📁")
-            st.write(
-                "Aquí puedes ver los archivos que has verificado. "
-                "Recuerda que la firma digital es única para cada archivo."
+            st.subheader("Verificar Firma ✅")
+            original_file = st.file_uploader(
+                "Sube el archivo original", key="file_original"
             )
-            try:
-                user_data = users_table.get_entity(
-                    "usuario", st.session_state.current_user
-                )
-                private_key_data = user_data["PrivateKey"].encode()
+            signature_file = st.file_uploader(
+                "Sube el archivo .firma", key="file_signature"
+            )
 
-                st.download_button(
-                    label="📥 Descargar Clave Privada Nuevamente",
-                    data=private_key_data,
-                    file_name=f"{st.session_state.current_user}_clave_privada.pem",
-                    mime="text/plain",
-                )
-            except Exception:
-                st.error("No se pudo recuperar la clave privada desde la tabla ❌")
+            if original_file and signature_file:
+                original_bytes = original_file.read()
+                signature_b64 = signature_file.read().decode()
+
+                firmante = identificar_firmante(original_bytes, signature_b64)
+
+                if firmante:
+                    try:
+                        guardar_archivo_firmado(
+                            firmante, original_file.name, signature_b64
+                        )
+                    except Exception as e:
+                        st.error(f"Error al guardar el archivo firmado: {e}")
+                        st.stop()
+                    st.success(
+                        f"Firma válida. Documento firmado por: **{firmante}** ✅"
+                    )
+                else:
+                    st.error(
+                        "La firma NO es válida o no se pudo identificar al firmante ❌"
+                    )
 
 # Pie de página con HTML y CSS embebido
 footer = """
