@@ -65,7 +65,7 @@ def insert_user(username, password):
             "PrivateKey": private_key,
             "PublicKey": public_key,
             "Files": [],
-            "FechaCreacion": datetime.utcnow().isoformat(),
+            "FechaCreacion": datetime.now().strftime("%d/%m/%Y %H:%M"),
         }
     )
 
@@ -75,7 +75,7 @@ def insert_access_log(username):
         {
             "PartitionKey": "acceso",
             "RowKey": username,
-            "FechaAcceso": datetime.utcnow().isoformat(),
+            "FechaAcceso": datetime.now().strftime("%d/%m/%Y %H:%M"),
         }
     )
 
