@@ -363,7 +363,7 @@ else:
                 username = user["RowKey"]
                 col1, col2 = st.columns([5, 1])
                 with col1:
-                    if username.capitalize() != "Tecdemonterrey":
+                    if username.capitalize() == "Tecdemonterrey":
                         st.markdown(f"**👤 ADMINISTRADOR:** {username}")
                     else:
                         st.markdown(f"**👤 Usuario:** {username}")
