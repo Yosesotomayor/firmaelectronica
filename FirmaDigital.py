@@ -386,10 +386,8 @@ else:
             uploaded_file = st.file_uploader(
                 "Selecciona un archivo para firmar", key="file_firma"
             )
-            users = load_users()
-            st.dataframe(users['username'], use_container_width=True)
             
-            usuarios = users["username"].tolist()
+            usuarios = load_users()['username'].to_list()
 
             usuario_objetivo = st.selectbox("Selecciona el destinatario del documento firmado:", usuarios)
                     
