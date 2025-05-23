@@ -79,6 +79,26 @@ def insert_access_log(username):
         }
     )
 
+def guardar_archivo_firmado(username, filename, firma_base64, file_bytes=None):
+    firma_blob_path = f"firmas/{username}/{filename}.firma"
+    metadata_blob_path = f"firmas/{username}/{filename}.meta.txt"
+    original_blob_path = f"firmas/{username}/{filename}"
+
+    firma_blob = blob_service_client.get_blob_client(container=FILES_CONTAINER, blob=firma_blob_path)
+    firma_blob.upload_blob(firma_base64, overwrite=True)
+
+    if file_bytes:
+        original_blob = blob_service_client.get_blob_client(container=FILES_CONTAINER, blob=original_blob_path)
+        original_blob.upload_blob(file_bytes, overwrite=True)
+
+    metadata_content = (
+        f"Usuario dueño: {username}\n"
+        f"Firmado por: {st.session_state.current_user}\n"
+        f"Archivo: {filename}\n"
+        f"Fecha: {datetime.now()}\n"
+    )
+    meta_blob = blob_service_client.get_blob_client(container=FILES_CONTAINER, blob=metadata_blob_path)
+    meta_blob.upload_blob(metadata_content, overwrite=True)
 
 def load_users():
     users = users_table.query_entities("PartitionKey eq 'usuario'")
@@ -157,23 +177,6 @@ def verificar_firma(file_bytes, firma_base64):
         return True
     except InvalidSignature:
         return False
-
-
-# === FIRMAS ===
-def guardar_archivo_firmado(username, filename, firma_base64):
-    firma_blob_path = f"firmas/{username}/{filename}.firma"
-    metadata_blob_path = f"firmas/{username}/{filename}.meta.txt"
-    firma_blob = blob_service_client.get_blob_client(
-        container=FILES_CONTAINER, blob=firma_blob_path
-    )
-    firma_blob.upload_blob(firma_base64, overwrite=True)
-    metadata_content = (
-        f"Usuario dueño: {username}\nFirmado por: {st.session_state.current_user}\nArchivo: {filename}\nFecha: {datetime.now()}\n"
-    )
-    meta_blob = blob_service_client.get_blob_client(
-        container=FILES_CONTAINER, blob=metadata_blob_path
-    )
-    meta_blob.upload_blob(metadata_content, overwrite=True)
 
 
 def identificar_firmante(file_bytes, firma_base64):
@@ -619,22 +622,22 @@ else:
                         except Exception:
                             st.error("Error al obtener archivo .firma")
                     with col3:
-                        meta_path = f"firmas/{st.session_state.current_user}/{item['Archivo']}.meta.txt"
+                        original_path = f"firmas/{st.session_state.current_user}/{item['Archivo']}"
                         try:
-                            meta_blob = files_container_client.get_blob_client(meta_path)
-                            meta_data = meta_blob.download_blob().readall()
+                            original_blob = files_container_client.get_blob_client(original_path)
+                            original_data = original_blob.download_blob().readall()
                             st.download_button(
-                                label="📋 .meta",
-                                data=meta_data,
-                                file_name=f"{item['Archivo']}.meta.txt",
-                                mime="text/plain",
-                                key=f"dl_meta_{item['Archivo']}"
+                                label="📎 Archivo",
+                                data=original_data,
+                                file_name=item["Archivo"],
+                                mime="application/octet-stream",  # Cambiar si conoces el MIME exacto
+                                key=f"dl_original_{item['Archivo']}"
                             )
                         except Exception:
-                            st.error("Error al obtener archivo .meta")
+                            st.error("Error al obtener archivo original")
             else:
                 st.info("No tienes archivos firmados todavía.")
-                        
+                                            
         # CAMBIAR CONTRASEÑA ===
         with signed_tabs[2]:
             st.subheader("🔑 Cambiar Contraseña")
