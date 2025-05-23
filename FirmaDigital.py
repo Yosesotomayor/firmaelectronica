@@ -84,13 +84,16 @@ def guardar_archivo_firmado(username, filename, firma_base64, file_bytes=None):
     metadata_blob_path = f"firmas/{username}/{filename}.meta.txt"
     original_blob_path = f"firmas/{username}/{filename}"
 
+    # Subir firma
     firma_blob = blob_service_client.get_blob_client(container=FILES_CONTAINER, blob=firma_blob_path)
     firma_blob.upload_blob(firma_base64, overwrite=True)
 
+    # Subir archivo original (si se proporciona)
     if file_bytes:
         original_blob = blob_service_client.get_blob_client(container=FILES_CONTAINER, blob=original_blob_path)
         original_blob.upload_blob(file_bytes, overwrite=True)
 
+    # Subir metadatos
     metadata_content = (
         f"Usuario dueño: {username}\n"
         f"Firmado por: {st.session_state.current_user}\n"
