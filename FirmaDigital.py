@@ -312,6 +312,8 @@ if not st.session_state.logged_in:
                 st.error("Las contraseñas no coinciden ❌")
             elif user_exists(new_user):
                 st.warning("El nombre de usuario ya está registrado ⚠️")
+            elif len(new_pass) < 8:
+                st.error("La contraseña debe tener al menos 8 caracteres ❌")
             else:
                 st.success("Las contraseñas coinciden ✅")
                 if st.button("Crear Cuenta"):
