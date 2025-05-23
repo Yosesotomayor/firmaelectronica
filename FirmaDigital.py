@@ -365,7 +365,7 @@ else:
                 with col1:
                     st.markdown(f"**👤 Usuario:** {username}")
                 with col2:
-                    if username.str.capitalize() != "Tecdemonterrey":
+                    if username.capitalize() != "Tecdemonterrey":
                         if st.button("Eliminar", key=f"delete_{username}"):
                             try:
                                 users_table.delete_entity(partition_key="usuario", row_key=username)
