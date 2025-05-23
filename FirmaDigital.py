@@ -386,12 +386,10 @@ else:
             uploaded_file = st.file_uploader(
                 "Selecciona un archivo para firmar", key="file_firma"
             )
-            test = load_users()
-            st.dataframe(test, use_container_width=True)
+            users = load_users()
+            st.dataframe(users['username'], use_container_width=True)
             
-            usuarios =  [
-                u["RowKey"] for u in users_table.query_entities("PartitionKey eq 'usuario'")
-            ]
+            usuarios = users["username"].tolist()
 
             usuario_objetivo = st.selectbox("Selecciona el destinatario del documento firmado:", usuarios)
                     
