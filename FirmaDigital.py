@@ -274,7 +274,7 @@ def parse_password(raw):
             return f"⚠️ Error: {e}"
     else:
         return "❌ Tipo no compatible"
-
+    
 
 # === MENU PRINCIPAL ===
 if not st.session_state.logged_in:
@@ -341,7 +341,8 @@ else:
         st.session_state.current_user = ""
         st.rerun()
 
-    if st.session_state.current_user.capitalize() == "Tecdemonterrey":
+    #if st.session_state.current_user.capitalize() == "Tecdemonterrey":
+    if st.session_state.current_user.capitalize() == "Admin":    
         # === TABS PARA ADMINISTRADOR ===
         admin_tabs = st.tabs(
             [
@@ -365,7 +366,7 @@ else:
                 with col1:
                     st.markdown(f"**👤 Usuario:** {username}")
                 with col2:
-                    if username != "Admin":
+                    if username != "Aldmin":
                         if st.button("Eliminar", key=f"delete_{username}"):
                             try:
                                 users_table.delete_entity(partition_key="usuario", row_key=username)
