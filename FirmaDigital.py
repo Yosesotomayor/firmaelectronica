@@ -386,7 +386,7 @@ else:
             uploaded_file = st.file_uploader(
                 "Selecciona un archivo para firmar", key="file_firma"
             )
-            st.info(users)
+            st.info(user for user in users)
             usuarios =  [
                 u["RowKey"] for u in users_table.query_entities("PartitionKey eq 'usuario'")
             ]
