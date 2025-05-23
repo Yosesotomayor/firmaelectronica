@@ -584,6 +584,8 @@ else:
                     st.error("Las nuevas contraseñas no coinciden ❌")
                 elif not verify_user(st.session_state.current_user, old_pass):
                     st.error("La contraseña actual es incorrecta ❌")
+                elif len(new_pass) < 8:
+                    st.error("La contraseña debe tener al menos 8 caracteres ❌")
                 else:
                     new_hashed = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
                     try:
