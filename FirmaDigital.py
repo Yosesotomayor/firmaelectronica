@@ -386,9 +386,8 @@ else:
             uploaded_file = st.file_uploader(
                 "Selecciona un archivo para firmar", key="file_firma"
             )
-            # IMPRIMIR USUARIOS PARA DEBUGGING
-            st.write("Usuarios en la tabla:", users_table.query_entities("PartitionKey eq 'usuario'"))
-
+            test = load_users()
+            st.dataframe(test, use_container_width=True)
             
             usuarios =  [
                 u["RowKey"] for u in users_table.query_entities("PartitionKey eq 'usuario'")
