@@ -363,7 +363,10 @@ else:
                 username = user["RowKey"]
                 col1, col2 = st.columns([5, 1])
                 with col1:
-                    st.markdown(f"**👤 Usuario:** {username}")
+                    if username.capitalize() != "Tecdemonterrey":
+                        st.markdown(f"**👤 ADMINISTRADOR:** {username}")
+                    else:
+                        st.markdown(f"**👤 Usuario:** {username}")
                 with col2:
                     if username.capitalize() != "Tecdemonterrey":
                         if st.button("Eliminar", key=f"delete_{username}"):
