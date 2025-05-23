@@ -386,9 +386,8 @@ else:
             uploaded_file = st.file_uploader(
                 "Selecciona un archivo para firmar", key="file_firma"
             )
-            usuarios = ["(Firma autónoma - Admin)"] + [
+            usuarios =  [
                 u["RowKey"] for u in users_table.query_entities("PartitionKey eq 'usuario'")
-                if u["RowKey"] != "Admin"
             ]
 
             usuario_objetivo = st.selectbox("Selecciona el destinatario del documento firmado:", usuarios)
