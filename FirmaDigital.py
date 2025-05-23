@@ -457,75 +457,77 @@ else:
                 df = pd.DataFrame(all_firmas)
 
                 for i, row in df.iterrows():
-    col1, col2, col3, col4, col5 = st.columns([4, 1.5, 1.5, 1.5, 1])
-    usuario = row["Usuario"]
-    archivo = row["Archivo"]
+                    col1, col2, col3, col4, col5 = st.columns([4, 1.5, 1.5, 1.5, 1])
+                    usuario = row["Usuario"]
+                    archivo = row["Archivo"]
 
-    with col1:
-        st.markdown(f"**📄 {archivo}** — Propietario: `{usuario}`")
+                    with col1:
+                        st.markdown(f"**📄 {archivo}** — Propietario: `{usuario}`")
 
-    # Descargar .firma
-    with col2:
-        try:
-            firma_blob = files_container_client.get_blob_client(
-                f"firmas/{usuario}/{archivo}.firma"
-            )
-            firma_data = firma_blob.download_blob().readall()
-            st.download_button(
-                label="📥 .firma",
-                data=firma_data,
-                file_name=f"{archivo}.firma",
-                mime="text/plain",
-                key=f"dl_firma_admin_{usuario}_{archivo}"
-            )
-        except Exception:
-            st.error("Error al obtener .firma")
+                    # Descargar .firma
+                    with col2:
+                        try:
+                            firma_blob = files_container_client.get_blob_client(
+                                f"firmas/{usuario}/{archivo}.firma"
+                            )
+                            firma_data = firma_blob.download_blob().readall()
+                            st.download_button(
+                                label="📥 .firma",
+                                data=firma_data,
+                                file_name=f"{archivo}.firma",
+                                mime="text/plain",
+                                key=f"dl_firma_admin_{usuario}_{archivo}"
+                            )
+                        except Exception:
+                            st.error("Error al obtener .firma")
 
-    # Descargar .meta.txt
-    with col3:
-        try:
-            meta_blob = files_container_client.get_blob_client(
-                f"firmas/{usuario}/{archivo}.meta.txt"
-            )
-            meta_data = meta_blob.download_blob().readall()
-            st.download_button(
-                label="📋 .meta",
-                data=meta_data,
-                file_name=f"{archivo}.meta.txt",
-                mime="text/plain",
-                key=f"dl_meta_admin_{usuario}_{archivo}"
-            )
-        except Exception:
-            st.error("Error al obtener .meta")
+                    # Descargar .meta.txt
+                    with col3:
+                        try:
+                            meta_blob = files_container_client.get_blob_client(
+                                f"firmas/{usuario}/{archivo}.meta.txt"
+                            )
+                            meta_data = meta_blob.download_blob().readall()
+                            st.download_button(
+                                label="📋 .meta",
+                                data=meta_data,
+                                file_name=f"{archivo}.meta.txt",
+                                mime="text/plain",
+                                key=f"dl_meta_admin_{usuario}_{archivo}"
+                            )
+                        except Exception:
+                            st.error("Error al obtener .meta")
 
-    # Descargar archivo original
-    with col4:
-        try:
-            original_blob = files_container_client.get_blob_client(
-                f"firmas/{usuario}/{archivo}"
-            )
-            original_data = original_blob.download_blob().readall()
-            st.download_button(
-                label="📎 Archivo",
-                data=original_data,
-                file_name=archivo,
-                mime="application/octet-stream",
-                key=f"dl_file_admin_{usuario}_{archivo}"
-            )
-        except Exception:
-            st.error("Error al obtener archivo original")
+                    # Descargar archivo original
+                    with col4:
+                        try:
+                            original_blob = files_container_client.get_blob_client(
+                                f"firmas/{usuario}/{archivo}"
+                            )
+                            original_data = original_blob.download_blob().readall()
+                            st.download_button(
+                                label="📎 Archivo",
+                                data=original_data,
+                                file_name=archivo,
+                                mime="application/octet-stream",
+                                key=f"dl_file_admin_{usuario}_{archivo}"
+                            )
+                        except Exception:
+                            st.error("Error al obtener archivo original")
 
-    # Botón eliminar
-    with col5:
-        if st.button("🗑 Eliminar", key=f"del_{usuario}_{archivo}"):
-            try:
-                firma_blob.delete_blob()
-                meta_blob.delete_blob()
-                original_blob.delete_blob()
-                st.success(f"Archivo '{archivo}' eliminado correctamente.")
-                st.rerun()
-            except Exception as e:
-                st.error(f"No se pudo eliminar el archivo: {e}")
+                    # Botón eliminar
+                    with col5:
+                        if st.button("🗑 Eliminar", key=f"del_{usuario}_{archivo}"):
+                            try:
+                                firma_blob.delete_blob()
+                                meta_blob.delete_blob()
+                                original_blob.delete_blob()
+                                st.success(f"Archivo '{archivo}' eliminado correctamente.")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"No se pudo eliminar el archivo: {e}")
+            else:
+                st.info("No hay archivos firmados todavía.")
 
         # === TAB 5: Accesos por Día ===
         with admin_tabs[4]:
