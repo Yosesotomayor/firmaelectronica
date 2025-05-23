@@ -322,7 +322,7 @@ if not st.session_state.logged_in:
                     st.session_state["creado"] = True
                     st.session_state["nuevo_usuario"] = new_user
                     st.session_state["private_key_data"] = hashed_password
-            st.rerun()
+                    st.rerun()
 
 # === MENU DE PERFIL ===
 else:
