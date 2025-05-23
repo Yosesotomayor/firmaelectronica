@@ -246,7 +246,7 @@ with col3:
 
 # === INTERFAZ DE USUARIO ===
 st.markdown(
-    "<h1 style='text-align: center;'>Firma Digital para PrepaNet 🔐</h1>",
+    "<h1 style='text-align: center;'>Firma Digital PrepaNet 🔐</h1>",
     unsafe_allow_html=True,
 )
 st.markdown(
