@@ -394,14 +394,16 @@ else:
                     if usuario_objetivo.startswith("(")
                     else usuario_objetivo
                 )
-                guardar_archivo_firmado(destinatario, uploaded_file.name, firma_base64, file_bytes)
 
-                st.download_button(
-                    label="Descargar archivo .firma 📥",
-                    data=firma_base64,
-                    file_name=f"{uploaded_file.name}.firma",
-                    mime="text/plain",
-                )
+                if st.button("✅ Confirmar Firma"):
+                    guardar_archivo_firmado(destinatario, uploaded_file.name, firma_base64, file_bytes)
+
+                    st.download_button(
+                        label="Descargar archivo .firma 📥",
+                        data=firma_base64,
+                        file_name=f"{uploaded_file.name}.firma",
+                        mime="text/plain",
+                    )
         # === TAB 3: Verificar Firmas ===
         with admin_tabs[2]:
             st.subheader("Verificar Firma ✅")
