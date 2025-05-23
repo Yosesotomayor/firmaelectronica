@@ -284,45 +284,45 @@ if not st.session_state.logged_in:
         st.session_state.role = "IniciarSesion"
         st.markdown("<h2>Iniciar Sesión 🔑</h2>", unsafe_allow_html=True)
 
-        login_user = str(st.text_input("Nombre de Usuario", key="login_user"))
-        login_pass = st.text_input("Contraseña", type="password", key="login_pass")
-
-        if st.button("Iniciar Sesión"):
-            if verify_user(login_user, login_pass):
-                st.session_state.logged_in = True
-                st.session_state.current_user = login_user
-                registrar_acceso(login_user)
-                st.rerun()  # Recarga la app para mostrar las nuevas tabs
-            else:
-                st.error("Usuario o contraseña incorrectos ❌")
+        with st.form("login_form"):
+            login_user = st.text_input("Nombre de Usuario", key="login_user")
+            login_pass = st.text_input("Contraseña", type="password", key="login_pass")
+            submitted_login = st.form_submit_button("Iniciar Sesión")
+            if submitted_login:
+                if verify_user(login_user, login_pass):
+                    st.session_state.logged_in = True
+                    st.session_state.current_user = login_user
+                    registrar_acceso(login_user)
+                    st.rerun()
+                else:
+                    st.error("Usuario o contraseña incorrectos ❌")
 
     # === CREAR CUENTA ===
     with tabs[1]:
         st.session_state.role = "CrearCuenta"
         st.markdown("<h2>Crear Cuenta 💼</h2>", unsafe_allow_html=True)
 
-        new_user = st.text_input("Nombre de Usuario", key="new user")
-        new_pass = st.text_input("Contraseña", type="password", key="new_pass")
-        new_pass_confirm = st.text_input(
-            "Confirmar Contraseña", type="password", key="new_pass_confirm"
-        )
+        with st.form("register_form"):
+            new_user = st.text_input("Nombre de Usuario", key="new user")
+            new_pass = st.text_input("Contraseña", type="password", key="new_pass")
+            new_pass_confirm = st.text_input("Confirmar Contraseña", type="password", key="new_pass_confirm")
+            submitted_register = st.form_submit_button("Crear Cuenta")
 
-        if new_pass and new_pass_confirm:
-            if new_pass != new_pass_confirm:
-                st.error("Las contraseñas no coinciden ❌")
-            elif user_exists(new_user):
-                st.warning("El nombre de usuario ya está registrado ⚠️")
-            elif len(new_pass) < 8:
-                st.error("La contraseña debe tener al menos 8 caracteres ❌")
-            else:
-                st.success("Las contraseñas coinciden ✅")
-                if st.button("Crear Cuenta"):
+            if submitted_register:
+                if new_pass != new_pass_confirm:
+                    st.error("Las contraseñas no coinciden ❌")
+                elif user_exists(new_user):
+                    st.warning("El nombre de usuario ya está registrado ⚠️")
+                elif len(new_pass) < 8:
+                    st.error("La contraseña debe tener al menos 8 caracteres ❌")
+                else:
+                    st.success("Las contraseñas coinciden ✅")
                     hashed_password = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
                     insert_user(new_user, hashed_password)
                     st.session_state["creado"] = True
                     st.session_state["nuevo_usuario"] = new_user
                     st.session_state["private_key_data"] = hashed_password
-                    st.rerun()
+            st.rerun()
 
 # === MENU DE PERFIL ===
 else:
