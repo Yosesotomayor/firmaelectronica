@@ -589,7 +589,9 @@ else:
 
             archivos_usuario = []
             try:
-                blob_list = files_container_client.list_blobs(name_starts_with=f"firmas/{st.session_state.current_user}/")
+                blob_list = files_container_client.list_blobs(
+                    name_starts_with=f"firmas/{st.session_state.current_user}/"
+                )
                 for blob in blob_list:
                     if blob.name.endswith(".firma"):
                         archivo = blob.name.split("/")[-1].replace(".firma", "")
@@ -598,10 +600,41 @@ else:
                 st.error(f"Error al obtener archivos firmados: {e}")
 
             if archivos_usuario:
-                st.dataframe(pd.DataFrame(archivos_usuario))
+                for item in archivos_usuario:
+                    col1, col2, col3 = st.columns([5, 2, 2])
+                    with col1:
+                        st.markdown(f"**📄 {item['Archivo']}**")
+                    with col2:
+                        firma_path = f"firmas/{st.session_state.current_user}/{item['Archivo']}.firma"
+                        try:
+                            firma_blob = files_container_client.get_blob_client(firma_path)
+                            firma_data = firma_blob.download_blob().readall()
+                            st.download_button(
+                                label="📥 .firma",
+                                data=firma_data,
+                                file_name=f"{item['Archivo']}.firma",
+                                mime="text/plain",
+                                key=f"dl_firma_{item['Archivo']}"
+                            )
+                        except Exception:
+                            st.error("Error al obtener archivo .firma")
+                    with col3:
+                        meta_path = f"firmas/{st.session_state.current_user}/{item['Archivo']}.meta.txt"
+                        try:
+                            meta_blob = files_container_client.get_blob_client(meta_path)
+                            meta_data = meta_blob.download_blob().readall()
+                            st.download_button(
+                                label="📋 .meta",
+                                data=meta_data,
+                                file_name=f"{item['Archivo']}.meta.txt",
+                                mime="text/plain",
+                                key=f"dl_meta_{item['Archivo']}"
+                            )
+                        except Exception:
+                            st.error("Error al obtener archivo .meta")
             else:
                 st.info("No tienes archivos firmados todavía.")
-                
+                        
         # CAMBIAR CONTRASEÑA ===
         with signed_tabs[2]:
             st.subheader("🔑 Cambiar Contraseña")
