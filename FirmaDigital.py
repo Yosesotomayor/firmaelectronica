@@ -4,6 +4,7 @@ import pandas as pd
 import bcrypt
 import os
 import base64
+import pytz
 from azure.storage.blob import BlobServiceClient
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
@@ -58,6 +59,8 @@ def generate_keys():
 
 def insert_user(username, password):
     private_key, public_key = generate_keys()
+    tz = pytz.timezone("America/Mexico_City")
+    fecha_creacion = datetime.now(tz).strftime("%d/%m/%Y %H:%M")
     users_table.upsert_entity(
         {
             "PartitionKey": "usuario",
@@ -65,17 +68,19 @@ def insert_user(username, password):
             "Password": password,
             "PrivateKey": private_key,
             "PublicKey": public_key,
-            "FechaCreacion": datetime.now().strftime("%d/%m/%Y %H:%M"),
+            "FechaCreacion": fecha_creacion,
         }
     )
 
 
 def insert_access_log(username):
+    tz = pytz.timezone("America/Mexico_City")
+    fecha_acceso = datetime.now(tz).strftime("%d/%m/%Y %H:%M")
     acces_table.upsert_entity(
         {
             "PartitionKey": "acceso",
             "RowKey": username,
-            "FechaAcceso": datetime.now().strftime("%d/%m/%Y %H:%M"),
+            "FechaAcceso": fecha_acceso,
         }
     )
 
