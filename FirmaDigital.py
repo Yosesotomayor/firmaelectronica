@@ -389,7 +389,12 @@ else:
                 firma_base64 = firmar_archivo(file_bytes)
                 st.text_area("Firma generada (Base64):", value=firma_base64, height=150)
 
-                guardar_archivo_firmado(usuario_objetivo, uploaded_file.name, firma_base64)
+                destinatario = (
+                    st.session_state.current_user
+                    if usuario_objetivo.startswith("(")
+                    else usuario_objetivo
+                )
+                guardar_archivo_firmado(destinatario, uploaded_file.name, firma_base64, file_bytes)
 
                 st.download_button(
                     label="Descargar archivo .firma 📥",
@@ -633,7 +638,7 @@ else:
                                 label="📎 Archivo",
                                 data=original_data,
                                 file_name=item["Archivo"],
-                                mime="application/octet-stream",  # Cambiar si conoces el MIME exacto
+                                mime="application/octet-stream",
                                 key=f"dl_original_{item['Archivo']}"
                             )
                         except Exception:
@@ -657,11 +662,8 @@ else:
                 else:
                     new_hashed = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
                     try:
-                        # Obtener entidad actual
                         user_data = users_table.get_entity("usuario", st.session_state.current_user)
                         user_data["Password"] = new_hashed
-
-                        # Reemplazar sin usar 'mode'
                         users_table.upsert_entity(user_data)
 
                         st.success("Contraseña actualizada correctamente ✅")
