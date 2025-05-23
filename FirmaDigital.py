@@ -123,7 +123,7 @@ def user_exists(username):
 
 def verify_user(username, password):
     df = load_users()
-    user = df[df["username"] == username]
+    user = df[df["username"].str.upper() == username.upper()]
     if not user.empty:
         stored = user.iloc[0]["password"]
         if isinstance(stored, str) and "," in stored:
@@ -284,7 +284,7 @@ if not st.session_state.logged_in:
         st.session_state.role = "IniciarSesion"
         st.markdown("<h2>Iniciar Sesión 🔑</h2>", unsafe_allow_html=True)
 
-        login_user = st.text_input("Nombre de Usuario", key="login_user")
+        login_user = str(st.text_input("Nombre de Usuario", key="login_user"))
         login_pass = st.text_input("Contraseña", type="password", key="login_pass")
 
         if st.button("Iniciar Sesión"):
@@ -339,7 +339,7 @@ else:
         st.session_state.current_user = ""
         st.rerun()
 
-    if st.session_state.current_user == "Admin":
+    if st.session_state.current_user.capitalize() == "Tecdemonterrey":
         # === TABS PARA ADMINISTRADOR ===
         admin_tabs = st.tabs(
             [
