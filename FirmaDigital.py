@@ -330,7 +330,7 @@ else:
     st.markdown(
         f"<div style='text-align: center; color: green; font-weight: bold; background-color: #d4edda; "
         "padding: 10px; border-radius: 5px; border: 1px solid #c3e6cb;'>"
-        f"Bienvenido {st.session_state.current_user}, estás en línea"
+        f"Bienvenido {st.session_state.current_user}, estás en línea CAWN"
         "</div>",
         unsafe_allow_html=True,
     )
