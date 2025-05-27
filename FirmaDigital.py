@@ -315,6 +315,14 @@ if not st.session_state.logged_in:
                     st.warning("El nombre de usuario ya está registrado ⚠️")
                 elif len(new_pass) < 8:
                     st.error("La contraseña debe tener al menos 8 caracteres ❌")
+                elif new_user.strip() == "":
+                    st.warning("El nombre de usuario no puede estar vacío ⚠️")
+                elif not new_user.isalnum():
+                    st.error("El nombre de usuario solo puede contener letras y números ❌")
+                elif new_user.lower() == "tecdemonterrey":
+                    st.error("El nombre de usuario 'tecdemonterrey' está reservado ❌")
+                elif " " in new_user:
+                    st.error("El nombre de usuario no puede contener espacios ❌")
                 else:
                     st.success("Las contraseñas coinciden ✅")
                     hashed_password = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
