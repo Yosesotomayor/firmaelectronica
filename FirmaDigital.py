@@ -357,8 +357,8 @@ else:
         # === TAB 1: Usuarios Registrados ===
         with admin_tabs[0]:
             st.subheader("📋 Usuarios Registrados")
-
             users = users_table.query_entities("PartitionKey eq 'usuario'")
+            st.write(users)
             for user in users:
                 username = user["RowKey"]
                 col1, col2 = st.columns([5, 1])
@@ -391,7 +391,6 @@ else:
 
             usuario_objetivo = st.selectbox("Selecciona el destinatario del documento firmado:", usuarios)
             
-            st.write(f"Usuario seleccionado: {usuario_objetivo}")
             if uploaded_file:
                 file_bytes = uploaded_file.read()
                 firma_base64 = firmar_archivo(file_bytes)
@@ -402,7 +401,6 @@ else:
                     if usuario_objetivo.startswith("(")
                     else usuario_objetivo
                 )
-                st.write(destinatario)
 
                 if st.button("✅ Confirmar Firma"):
                     guardar_archivo_firmado(destinatario, uploaded_file.name, firma_base64, file_bytes)
