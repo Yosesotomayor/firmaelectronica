@@ -401,6 +401,7 @@ else:
                     if usuario_objetivo.startswith("(")
                     else usuario_objetivo
                 )
+                st.write(destinatario)
 
                 if st.button("✅ Confirmar Firma"):
                     guardar_archivo_firmado(destinatario, uploaded_file.name, firma_base64, file_bytes)
