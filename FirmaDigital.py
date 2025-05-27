@@ -358,7 +358,6 @@ else:
         with admin_tabs[0]:
             st.subheader("📋 Usuarios Registrados")
             users = users_table.query_entities("PartitionKey eq 'usuario'")
-            st.write(user for user in users)
             for user in users:
                 username = user["RowKey"]
                 col1, col2 = st.columns([5, 1])
