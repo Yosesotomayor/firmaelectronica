@@ -101,7 +101,7 @@ def guardar_archivo_firmado(username, filename, firma_base64, file_bytes=None):
     # Subir metadatos
     metadata_content = (
         f"Usuario dueño: {username}\n"
-        f"Firmado por: {st.session_state.current_user}\n"
+        f"Firmado por: {st.session_state.current_user.capitalize()}\n"
         f"Archivo: {filename}\n"
         f"Fecha: {datetime.now()}\n"
     )
@@ -153,7 +153,7 @@ def cargar_llave_privada():
 
 
 def cargar_llave_publica():
-    user = st.session_state.current_user
+    user = st.session_state.current_user.capitalize()
     user_data = users_table.get_entity("usuario", user)
     return serialization.load_pem_public_key(user_data["PublicKey"].encode())
 
@@ -291,7 +291,7 @@ if not st.session_state.logged_in:
             if submitted_login:
                 if verify_user(login_user, login_pass):
                     st.session_state.logged_in = True
-                    st.session_state.current_user = login_user
+                    st.session_state.current_user = login_user.capitalize()
                     registrar_acceso(login_user)
                     st.rerun()
                 else:
@@ -336,7 +336,7 @@ else:
     st.markdown(
         f"<div style='text-align: center; color: green; font-weight: bold; background-color: #d4edda; "
         "padding: 10px; border-radius: 5px; border: 1px solid #c3e6cb;'>"
-        f"Bienvenido {st.session_state.current_user}, estás en línea."
+        f"Bienvenido {st.session_state.current_user.capitalize()}, estás en línea."
         "</div>",
         unsafe_allow_html=True,
     )
@@ -402,7 +402,7 @@ else:
                 st.text_area("Firma generada (Base64):", value=firma_base64, height=150)
 
                 destinatario = (
-                    st.session_state.current_user
+                    st.session_state.current_user.capitalize()
                     if usuario_objetivo.startswith("(")
                     else usuario_objetivo
                 )
@@ -588,7 +588,7 @@ else:
             if st.button("Actualizar Contraseña"):
                 if new_pass != confirm_new_pass:
                     st.error("Las nuevas contraseñas no coinciden ❌")
-                elif not verify_user(st.session_state.current_user, old_pass):
+                elif not verify_user(st.session_state.current_user.capitalize(), old_pass):
                     st.error("La contraseña actual es incorrecta ❌")
                 elif len(new_pass) < 8:
                     st.error("La contraseña debe tener al menos 8 caracteres ❌")
@@ -596,7 +596,7 @@ else:
                     new_hashed = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
                     try:
                         # Obtener entidad actual
-                        user_data = users_table.get_entity("usuario", st.session_state.current_user)
+                        user_data = users_table.get_entity("usuario", st.session_state.current_user.capitalize())
                         user_data["Password"] = new_hashed
 
                         # Reemplazar sin usar 'mode'
@@ -653,7 +653,7 @@ else:
             archivos_usuario = []
             try:
                 blob_list = files_container_client.list_blobs(
-                    name_starts_with=f"firmas/{st.session_state.current_user}/"
+                    name_starts_with=f"firmas/{st.session_state.current_user.capitalize()}/"
                 )
                 for blob in blob_list:
                     if blob.name.endswith(".firma"):
@@ -668,7 +668,7 @@ else:
                     with col1:
                         st.markdown(f"**📄 {item['Archivo']}**")
                     with col2:
-                        firma_path = f"firmas/{st.session_state.current_user}/{item['Archivo']}.firma"
+                        firma_path = f"firmas/{st.session_state.current_user.capitalize()}/{item['Archivo']}.firma"
                         try:
                             firma_blob = files_container_client.get_blob_client(firma_path)
                             firma_data = firma_blob.download_blob().readall()
@@ -682,7 +682,7 @@ else:
                         except Exception:
                             st.error("Error al obtener archivo .firma")
                     with col3:
-                        original_path = f"firmas/{st.session_state.current_user}/{item['Archivo']}"
+                        original_path = f"firmas/{st.session_state.current_user.capitalize()}/{item['Archivo']}"
                         try:
                             original_blob = files_container_client.get_blob_client(original_path)
                             original_data = original_blob.download_blob().readall()
@@ -709,12 +709,12 @@ else:
             if st.button("Actualizar Contraseña"):
                 if new_pass != confirm_new_pass:
                     st.error("Las nuevas contraseñas no coinciden ❌")
-                elif not verify_user(st.session_state.current_user, old_pass):
+                elif not verify_user(st.session_state.current_user.capitalize(), old_pass):
                     st.error("La contraseña actual es incorrecta ❌")
                 else:
                     new_hashed = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
                     try:
-                        user_data = users_table.get_entity("usuario", st.session_state.current_user)
+                        user_data = users_table.get_entity("usuario", st.session_state.current_user.capitalize())
                         user_data["Password"] = new_hashed
                         users_table.upsert_entity(user_data)
 
