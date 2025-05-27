@@ -390,7 +390,8 @@ else:
             usuarios = load_users()['username'].to_list()
 
             usuario_objetivo = st.selectbox("Selecciona el destinatario del documento firmado:", usuarios)
-                    
+            
+            st.write(f"Usuario seleccionado: {usuario_objetivo}")
             if uploaded_file:
                 file_bytes = uploaded_file.read()
                 firma_base64 = firmar_archivo(file_bytes)
