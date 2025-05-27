@@ -153,7 +153,9 @@ def cargar_llave_privada():
 
 
 def cargar_llave_publica():
-    user = st.session_state.current_user.capitalize()
+    user = st.session_state.current_user
+    st.warning(user.capitalize())
+    st.error(user)
     user_data = users_table.get_entity("usuario", user)
     return serialization.load_pem_public_key(user_data["PublicKey"].encode())
 
