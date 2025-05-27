@@ -145,16 +145,15 @@ def verify_user(username, password):
 
 # === FUNCIONES DE CRIPTOGRAFÍA ===
 def cargar_llave_privada():
-    user = st.session_state.current_user
+    user = st.session_state.current_user.capitalize()
     user_data = users_table.get_entity("usuario", user)
-    st.write(f"Datos de usuario: {user_data}")
     return serialization.load_pem_private_key(
         user_data["PrivateKey"].encode(), password=None
     )
 
 
 def cargar_llave_publica():
-    user = st.session_state.current_user
+    user = st.session_state.current_user.capitalize()
     user_data = users_table.get_entity("usuario", user)
     return serialization.load_pem_public_key(user_data["PublicKey"].encode())
 
