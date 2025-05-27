@@ -147,6 +147,7 @@ def verify_user(username, password):
 def cargar_llave_privada():
     user = st.session_state.current_user
     user_data = users_table.get_entity("usuario", user)
+    st.write(f"Datos de usuario: {user_data}")
     return serialization.load_pem_private_key(
         user_data["PrivateKey"].encode(), password=None
     )
