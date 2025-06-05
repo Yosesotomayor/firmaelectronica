@@ -561,18 +561,59 @@ else:
                 original_bytes = original_file.read()
                 signature_b64 = signature_file.read().decode()
 
-                firmante = identificar_firmante(original_bytes, signature_b64)
+                # Detectar qué algoritmo es válido
+                algoritmo_verificacion = None
+                firmante = None
+
+                users = users_table.query_entities("PartitionKey eq 'usuario'")
+                firma_bytes = base64.b64decode(signature_b64)
+
+                for user in users:
+                    username = user["RowKey"]
+                    try:
+                        public_key_rsa = serialization.load_pem_public_key(user["PublicKeyRSA"].encode())
+                        public_key_rsa.verify(
+                            firma_bytes,
+                            original_bytes,
+                            padding.PSS(
+                                mgf=padding.MGF1(hashes.SHA256()),
+                                salt_length=padding.PSS.MAX_LENGTH,
+                            ),
+                            hashes.SHA256(),
+                        )
+                        firmante = username
+                        algoritmo_verificacion = "RSA"
+                        break
+                    except InvalidSignature:
+                        pass
+                    except Exception:
+                        pass
+
+                    try:
+                        public_key_ecdsa = serialization.load_pem_public_key(user["PublicKeyECDSA"].encode())
+                        public_key_ecdsa.verify(
+                            firma_bytes,
+                            original_bytes,
+                            ec.ECDSA(hashes.SHA256()),
+                        )
+                        firmante = username
+                        algoritmo_verificacion = "ECDSA"
+                        break
+                    except InvalidSignature:
+                        pass
+                    except Exception:
+                        pass
 
                 if firmante:
                     try:
                         guardar_archivo_firmado(
-                            firmante, original_file.name, signature_b64
+                            firmante, original_file.name, signature_b64, algoritmo=algoritmo_verificacion
                         )
                     except Exception as e:
                         st.error(f"Error al guardar el archivo firmado: {e}")
                         st.stop()
                     st.success(
-                        f"Firma válida. Documento firmado por: **{firmante}** ✅"
+                        f"Firma válida. Documento firmado por: **{firmante}** usando **{algoritmo_verificacion}** ✅"
                     )
                 else:
                     st.error(
