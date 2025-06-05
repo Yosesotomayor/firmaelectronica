@@ -534,7 +534,11 @@ else:
 
                     if st.button("✅ Confirmar Firma"):
                         guardar_archivo_firmado(
-                            destinatario, uploaded_file.name, st.session_state.firma_base64, file_bytes
+                            destinatario,
+                            uploaded_file.name,
+                            st.session_state.firma_base64,
+                            file_bytes,
+                            algoritmo=st.session_state.algoritmo_usado,
                         )
                         st.success(
                             f"Archivo firmado correctamente con {st.session_state.algoritmo_usado}"
