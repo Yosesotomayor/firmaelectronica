@@ -186,8 +186,14 @@ def cargar_llave_privada_ecdsa():
     user = st.session_state.current_user.capitalize()
     user_data = users_table.get_entity("usuario", user)
     return serialization.load_pem_private_key(
-        user_data["PrivateKey"].encode(), password=None
+        user_data["PrivateKeyECDSA"].encode(), password=None
     )
+
+
+def cargar_llave_publica_ecdsa():
+    user = st.session_state.current_user.capitalize()
+    user_data = users_table.get_entity("usuario", user)
+    return serialization.load_pem_public_key(user_data["PublicKeyECDSA"].encode())
 
 
 def cargar_llave_publica():
@@ -249,16 +255,29 @@ def verificar_firma(file_bytes, firma_base64):
     except InvalidSignature:
         return False
 
+def verificar_firma_ecdsa(file_bytes, firma_base64):
+    public_key = cargar_llave_publica_ecdsa()
+    firma = base64.b64decode(firma_base64)
+    try:
+        public_key.verify(
+            firma,
+            file_bytes,
+            ec.ECDSA(hashes.SHA256()),
+        )
+        return True
+    except InvalidSignature:
+        return False
 
 def identificar_firmante(file_bytes, firma_base64):
     users = users_table.query_entities("PartitionKey eq 'usuario'")
+    firma = base64.b64decode(firma_base64)
     for user in users:
         username = user["RowKey"]
-        public_key_pem = user["PublicKey"]
+        # Probar con RSA
         try:
-            public_key = serialization.load_pem_public_key(public_key_pem.encode())
-            public_key.verify(
-                base64.b64decode(firma_base64),
+            public_key_rsa = serialization.load_pem_public_key(user["PublicKeyRSA"].encode())
+            public_key_rsa.verify(
+                firma,
                 file_bytes,
                 padding.PSS(
                     mgf=padding.MGF1(hashes.SHA256()),
@@ -268,11 +287,23 @@ def identificar_firmante(file_bytes, firma_base64):
             )
             return username
         except InvalidSignature:
-            st.info(f"Firma inválida con {username}")
-            continue
-        except Exception as e:
-            st.error(f"{username} falló por: {e}")
-            continue
+            pass
+        except Exception:
+            pass
+
+        # Probar con ECDSA
+        try:
+            public_key_ecdsa = serialization.load_pem_public_key(user["PublicKeyECDSA"].encode())
+            public_key_ecdsa.verify(
+                firma,
+                file_bytes,
+                ec.ECDSA(hashes.SHA256()),
+            )
+            return username
+        except InvalidSignature:
+            pass
+        except Exception:
+            pass
     return None
 
 
