@@ -77,7 +77,8 @@ def generate_keys_ecdsa():
 
 
 def insert_user(username, password):
-    private_key, public_key = generate_keys()
+    private_key_rsa, public_key_rsa = generate_keys()
+    private_key_ecdsa, public_key_ecdsa = generate_keys_ecdsa()
     tz = pytz.timezone("America/Mexico_City")
     fecha_creacion = datetime.now(tz).strftime("%d/%m/%Y %H:%M")
     users_table.upsert_entity(
@@ -85,8 +86,10 @@ def insert_user(username, password):
             "PartitionKey": "usuario",
             "RowKey": username,
             "Password": password,
-            "PrivateKey": private_key,
-            "PublicKey": public_key,
+            "PrivateKeyRSA": private_key_rsa,
+            "PublicKeyRSA": public_key_rsa,
+            "PrivateKeyECDSA": private_key_ecdsa,
+            "PublicKeyECDSA": public_key_ecdsa,
             "FechaCreacion": fecha_creacion,
         }
     )
