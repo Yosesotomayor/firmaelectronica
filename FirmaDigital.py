@@ -873,41 +873,65 @@ else:
 
             if archivos_usuario:
                 for item in archivos_usuario:
-                    col1, col2, col3 = st.columns([5, 2, 2])
+                    col1, col2, col3, col4 = st.columns([4, 2, 2, 1])
+
+                    usuario = st.session_state.current_user.capitalize()
+                    archivo = item["Archivo"]
+
+                    # Obtener algoritmo desde el archivo .meta.txt
+                    algoritmo_text = ""
+                    try:
+                        meta_blob = files_container_client.get_blob_client(
+                            f"firmas/{usuario}/{archivo}.meta.txt"
+                        )
+                        meta_data = meta_blob.download_blob().readall().decode()
+                        for line in meta_data.splitlines():
+                            if line.startswith("Algoritmo:"):
+                                algoritmo_text = line.replace("Algoritmo:", "").strip()
+                                break
+                    except Exception:
+                        algoritmo_text = "Desconocido"
+
                     with col1:
-                        st.markdown(f"**📄 {item['Archivo']}**")
+                        st.markdown(f"**📄 {archivo}**  \nAlgoritmo: `{algoritmo_text}`")
                     with col2:
-                        firma_path = f"firmas/{st.session_state.current_user.capitalize()}/{item['Archivo']}.firma"
+                        firma_path = f"firmas/{usuario}/{archivo}.firma"
                         try:
-                            firma_blob = files_container_client.get_blob_client(
-                                firma_path
-                            )
+                            firma_blob = files_container_client.get_blob_client(firma_path)
                             firma_data = firma_blob.download_blob().readall()
                             st.download_button(
-                                label="📥 .firma",
+                                label="📥 Descargar .firma",
                                 data=firma_data,
-                                file_name=f"{item['Archivo']}.firma",
+                                file_name=f"{archivo}.firma",
                                 mime="text/plain",
-                                key=f"dl_firma_{item['Archivo']}",
+                                key=f"dl_firma_{archivo}",
                             )
                         except Exception:
                             st.error("Error al obtener archivo .firma")
                     with col3:
-                        original_path = f"firmas/{st.session_state.current_user.capitalize()}/{item['Archivo']}"
+                        original_path = f"firmas/{usuario}/{archivo}"
                         try:
-                            original_blob = files_container_client.get_blob_client(
-                                original_path
-                            )
+                            original_blob = files_container_client.get_blob_client(original_path)
                             original_data = original_blob.download_blob().readall()
                             st.download_button(
-                                label="📎 Archivo",
+                                label="📎 Descargar archivo",
                                 data=original_data,
-                                file_name=item["Archivo"],
+                                file_name=archivo,
                                 mime="application/octet-stream",
-                                key=f"dl_original_{item['Archivo']}",
+                                key=f"dl_original_{archivo}",
                             )
                         except Exception:
                             st.error("Error al obtener archivo original")
+                    with col4:
+                        if st.button("🗑 Eliminar", key=f"del_{archivo}"):
+                            try:
+                                firma_blob.delete_blob()
+                                meta_blob.delete_blob()
+                                original_blob.delete_blob()
+                                st.success(f"Archivo '{archivo}' eliminado correctamente.")
+                                st.experimental_rerun()
+                            except Exception as e:
+                                st.error(f"No se pudo eliminar el archivo: {e}")
             else:
                 st.info("No tienes archivos firmados todavía.")
 
