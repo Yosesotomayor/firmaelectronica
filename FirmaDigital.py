@@ -179,6 +179,14 @@ def cargar_llave_privada():
     )
 
 
+def cargar_llave_privada_ecdsa():
+    user = st.session_state.current_user.capitalize()
+    user_data = users_table.get_entity("usuario", user)
+    return serialization.load_pem_private_key(
+        user_data["PrivateKey"].encode(), password=None
+    )
+
+
 def cargar_llave_publica():
     user = st.session_state.current_user.capitalize()
     user_data = users_table.get_entity("usuario", user)
@@ -198,11 +206,27 @@ def firmar_archivo(file_bytes):
 
 
 def firmar_archivo_ecdsa(file_bytes):
+    private_key = cargar_llave_privada_ecdsa()
+    firma = private_key.sign(file_bytes, ec.ECDSA(hashes.SHA256()))
+    return base64.b64encode(firma).decode()
+
+
+def firmar_archivo_detectar(file_bytes):
     private_key = cargar_llave_privada()
-    firma = private_key.sign(
-        file_bytes,
-        ec.ECDSA(hashes.SHA256())
-    )
+
+    if isinstance(private_key, rsa.RSAPrivateKey):
+        firma = private_key.sign(
+            file_bytes,
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256(),
+        )
+    elif isinstance(private_key, ec.EllipticCurvePrivateKey):
+        firma = private_key.sign(file_bytes, ec.ECDSA(hashes.SHA256()))
+    else:
+        raise ValueError("Tipo de llave privada no soportado para firmar.")
+
     return base64.b64encode(firma).decode()
 
 
@@ -450,20 +474,18 @@ else:
 
                 with col1:
                     if st.button("Firmar con RSA"):
-                        firma_base64 = firmar_archivo(
-                            file_bytes
-                        )  # Suponiendo que firmas con RSA usan esta función
+                        firma_base64 = firmar_archivo(file_bytes)  
                         algoritmo_usado = "RSA"
 
                 with col2:
                     if st.button("Firmar con ECDSA"):
-                        firma_base64 = firmar_archivo_ecdsa(
-                            file_bytes
-                        )  # Suponiendo función para firmar con ECDSA
+                        firma_base64 = firmar_archivo_ecdsa(file_bytes)
                         algoritmo_usado = "ECDSA"
 
                 if firma_base64:
-                    st.text_area("Firma generada (Base64):", value=firma_base64, height=150)
+                    st.text_area(
+                        "Firma generada (Base64):", value=firma_base64, height=150
+                    )
 
                     destinatario = (
                         st.session_state.current_user.capitalize()
@@ -475,7 +497,9 @@ else:
                         guardar_archivo_firmado(
                             destinatario, uploaded_file.name, firma_base64, file_bytes
                         )
-                        st.success(f"Archivo firmado correctamente con {algoritmo_usado}")
+                        st.success(
+                            f"Archivo firmado correctamente con {algoritmo_usado}"
+                        )
 
                         st.download_button(
                             label="Descargar archivo .firma 📥",
