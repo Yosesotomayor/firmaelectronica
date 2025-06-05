@@ -427,62 +427,62 @@ else:
                         pass
 
         # === TAB 2: Firmar Archivos ===
-with admin_tabs[1]:
-    st.subheader("Firma de Archivo 📁")
+        with admin_tabs[1]:
+            st.subheader("Firma de Archivo 📁")
 
-    uploaded_file = st.file_uploader(
-        "Selecciona un archivo para firmar", key="file_firma"
-    )
-
-    usuarios = load_users()["username"].to_list()
-
-    usuario_objetivo = st.selectbox(
-        "Selecciona el destinatario del documento firmado:", usuarios
-    )
-
-    if uploaded_file:
-        file_bytes = uploaded_file.read()
-
-        firma_base64 = None
-        algoritmo_usado = None
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            if st.button("Firmar con RSA"):
-                firma_base64 = firmar_archivo(
-                    file_bytes
-                )  # Suponiendo que firmas con RSA usan esta función
-                algoritmo_usado = "RSA"
-
-        with col2:
-            if st.button("Firmar con ECDSA"):
-                firma_base64 = firmar_archivo_ecdsa(
-                    file_bytes
-                )  # Suponiendo función para firmar con ECDSA
-                algoritmo_usado = "ECDSA"
-
-        if firma_base64:
-            st.text_area("Firma generada (Base64):", value=firma_base64, height=150)
-
-            destinatario = (
-                st.session_state.current_user.capitalize()
-                if usuario_objetivo.startswith("(")
-                else usuario_objetivo
+            uploaded_file = st.file_uploader(
+                "Selecciona un archivo para firmar", key="file_firma"
             )
 
-            if st.button("✅ Confirmar Firma"):
-                guardar_archivo_firmado(
-                    destinatario, uploaded_file.name, firma_base64, file_bytes
-                )
-                st.success(f"Archivo firmado correctamente con {algoritmo_usado}")
+            usuarios = load_users()["username"].to_list()
 
-                st.download_button(
-                    label="Descargar archivo .firma 📥",
-                    data=firma_base64,
-                    file_name=f"{uploaded_file.name}.firma",
-                    mime="text/plain",
-                )
+            usuario_objetivo = st.selectbox(
+                "Selecciona el destinatario del documento firmado:", usuarios
+            )
+
+            if uploaded_file:
+                file_bytes = uploaded_file.read()
+
+                firma_base64 = None
+                algoritmo_usado = None
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    if st.button("Firmar con RSA"):
+                        firma_base64 = firmar_archivo(
+                            file_bytes
+                        )  # Suponiendo que firmas con RSA usan esta función
+                        algoritmo_usado = "RSA"
+
+                with col2:
+                    if st.button("Firmar con ECDSA"):
+                        firma_base64 = firmar_archivo_ecdsa(
+                            file_bytes
+                        )  # Suponiendo función para firmar con ECDSA
+                        algoritmo_usado = "ECDSA"
+
+                if firma_base64:
+                    st.text_area("Firma generada (Base64):", value=firma_base64, height=150)
+
+                    destinatario = (
+                        st.session_state.current_user.capitalize()
+                        if usuario_objetivo.startswith("(")
+                        else usuario_objetivo
+                    )
+
+                    if st.button("✅ Confirmar Firma"):
+                        guardar_archivo_firmado(
+                            destinatario, uploaded_file.name, firma_base64, file_bytes
+                        )
+                        st.success(f"Archivo firmado correctamente con {algoritmo_usado}")
+
+                        st.download_button(
+                            label="Descargar archivo .firma 📥",
+                            data=firma_base64,
+                            file_name=f"{uploaded_file.name}.firma",
+                            mime="text/plain",
+                        )
 
         # === TAB 3: Verificar Firmas ===
         with admin_tabs[2]:
