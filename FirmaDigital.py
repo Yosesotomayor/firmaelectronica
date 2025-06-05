@@ -413,8 +413,8 @@ if not st.session_state.logged_in:
                     st.error("La contraseña debe tener al menos 8 caracteres ❌")
                 elif new_user.strip() == "":
                     st.warning("El nombre de usuario no puede estar vacío ⚠️")
-                elif new_user.lower() == "tecdemonterrey":
-                    st.error("El nombre de usuario 'tecdemonterrey' está reservado ❌")
+                #elif new_user.lower() == "tecdemonterrey":
+                #   st.error("El nombre de usuario 'tecdemonterrey' está reservado ❌")
                 elif " " in new_user:
                     st.error("El nombre de usuario no puede contener espacios ❌")
                 else:
