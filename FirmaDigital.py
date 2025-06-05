@@ -8,6 +8,7 @@ import pytz
 from azure.storage.blob import BlobServiceClient
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.exceptions import InvalidSignature
 from datetime import datetime
 from azure.data.tables import TableServiceClient
@@ -54,6 +55,26 @@ def generate_keys():
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     ).decode()
 
+    return private_pem, public_pem
+
+
+def generate_keys_ecdsa():
+    private_key = ec.generate_private_key(
+        ec.SECP256R1()  # Curva secp256r1
+    )
+    public_key = private_key.public_key()
+
+    private_pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
+    ).decode()
+
+    public_pem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    ).decode()
+    
     return private_pem, public_pem
 
 
