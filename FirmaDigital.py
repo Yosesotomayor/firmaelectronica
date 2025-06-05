@@ -501,24 +501,27 @@ else:
             if uploaded_file:
                 file_bytes = uploaded_file.read()
 
-                firma_base64 = None
-                algoritmo_usado = None
+                # Inicializar en session_state si no existe
+                if "firma_base64" not in st.session_state:
+                    st.session_state.firma_base64 = None
+                if "algoritmo_usado" not in st.session_state:
+                    st.session_state.algoritmo_usado = None
 
                 col1, col2 = st.columns(2)
 
                 with col1:
                     if st.button("Firmar con RSA"):
-                        firma_base64 = firmar_archivo(file_bytes)
-                        algoritmo_usado = "RSA"
+                        st.session_state.firma_base64 = firmar_archivo(file_bytes)
+                        st.session_state.algoritmo_usado = "RSA"
 
                 with col2:
                     if st.button("Firmar con ECDSA"):
-                        firma_base64 = firmar_archivo_ecdsa(file_bytes)
-                        algoritmo_usado = "ECDSA"
+                        st.session_state.firma_base64 = firmar_archivo_ecdsa(file_bytes)
+                        st.session_state.algoritmo_usado = "ECDSA"
 
-                if firma_base64:
+                if st.session_state.firma_base64:
                     st.text_area(
-                        "Firma generada (Base64):", value=firma_base64, height=150
+                        "Firma generada (Base64):", value=st.session_state.firma_base64, height=150
                     )
 
                     destinatario = (
@@ -529,18 +532,20 @@ else:
 
                     if st.button("✅ Confirmar Firma"):
                         guardar_archivo_firmado(
-                            destinatario, uploaded_file.name, firma_base64, file_bytes
+                            destinatario, uploaded_file.name, st.session_state.firma_base64, file_bytes
                         )
                         st.success(
-                            f"Archivo firmado correctamente con {algoritmo_usado}"
+                            f"Archivo firmado correctamente con {st.session_state.algoritmo_usado}"
                         )
-
                         st.download_button(
                             label="Descargar archivo .firma 📥",
-                            data=firma_base64,
+                            data=st.session_state.firma_base64,
                             file_name=f"{uploaded_file.name}.firma",
                             mime="text/plain",
                         )
+                        # Limpiar estado después de confirmar
+                        st.session_state.firma_base64 = None
+                        st.session_state.algoritmo_usado = None
 
         # === TAB 3: Verificar Firmas ===
         with admin_tabs[2]:
