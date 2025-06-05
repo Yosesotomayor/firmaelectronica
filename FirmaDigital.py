@@ -178,7 +178,7 @@ def cargar_llave_privada():
     user = st.session_state.current_user.capitalize()
     user_data = users_table.get_entity("usuario", user)
     return serialization.load_pem_private_key(
-        user_data["PrivateKey"].encode(), password=None
+        user_data["PrivateKeyRSA"].encode(), password=None
     )
 
 
@@ -199,7 +199,7 @@ def cargar_llave_publica_ecdsa():
 def cargar_llave_publica():
     user = st.session_state.current_user.capitalize()
     user_data = users_table.get_entity("usuario", user)
-    return serialization.load_pem_public_key(user_data["PublicKey"].encode())
+    return serialization.load_pem_public_key(user_data["PublicKeyRSA"].encode())
 
 
 def firmar_archivo(file_bytes):
@@ -413,8 +413,8 @@ if not st.session_state.logged_in:
                     st.error("La contraseña debe tener al menos 8 caracteres ❌")
                 elif new_user.strip() == "":
                     st.warning("El nombre de usuario no puede estar vacío ⚠️")
-                #elif new_user.lower() == "tecdemonterrey":
-                #   st.error("El nombre de usuario 'tecdemonterrey' está reservado ❌")
+                elif new_user.lower() == "tecdemonterrey":
+                   st.error("El nombre de usuario 'tecdemonterrey' está reservado ❌")
                 elif " " in new_user:
                     st.error("El nombre de usuario no puede contener espacios ❌")
                 else:
