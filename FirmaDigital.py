@@ -59,9 +59,7 @@ def generate_keys():
 
 
 def generate_keys_ecdsa():
-    private_key = ec.generate_private_key(
-        ec.SECP256R1()  # Curva secp256r1
-    )
+    private_key = ec.generate_private_key(ec.SECP256R1())  # Curva secp256r1
     public_key = private_key.public_key()
 
     private_pem = private_key.private_bytes(
@@ -74,7 +72,7 @@ def generate_keys_ecdsa():
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     ).decode()
-    
+
     return private_pem, public_pem
 
 
@@ -105,18 +103,23 @@ def insert_access_log(username):
         }
     )
 
+
 def guardar_archivo_firmado(username, filename, firma_base64, file_bytes=None):
     firma_blob_path = f"firmas/{username}/{filename}.firma"
     metadata_blob_path = f"firmas/{username}/{filename}.meta.txt"
     original_blob_path = f"firmas/{username}/{filename}"
 
     # Subir firma
-    firma_blob = blob_service_client.get_blob_client(container=FILES_CONTAINER, blob=firma_blob_path)
+    firma_blob = blob_service_client.get_blob_client(
+        container=FILES_CONTAINER, blob=firma_blob_path
+    )
     firma_blob.upload_blob(firma_base64, overwrite=True)
 
     # Subir archivo original (si se proporciona)
     if file_bytes:
-        original_blob = blob_service_client.get_blob_client(container=FILES_CONTAINER, blob=original_blob_path)
+        original_blob = blob_service_client.get_blob_client(
+            container=FILES_CONTAINER, blob=original_blob_path
+        )
         original_blob.upload_blob(file_bytes, overwrite=True)
 
     # Subir metadatos
@@ -126,8 +129,11 @@ def guardar_archivo_firmado(username, filename, firma_base64, file_bytes=None):
         f"Archivo: {filename}\n"
         f"Fecha: {datetime.now()}\n"
     )
-    meta_blob = blob_service_client.get_blob_client(container=FILES_CONTAINER, blob=metadata_blob_path)
+    meta_blob = blob_service_client.get_blob_client(
+        container=FILES_CONTAINER, blob=metadata_blob_path
+    )
     meta_blob.upload_blob(metadata_content, overwrite=True)
+
 
 def load_users():
     users = users_table.query_entities("PartitionKey eq 'usuario'")
@@ -187,6 +193,15 @@ def firmar_archivo(file_bytes):
             mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH
         ),
         hashes.SHA256(),
+    )
+    return base64.b64encode(firma).decode()
+
+
+def firmar_archivo_ecdsa(file_bytes):
+    private_key = cargar_llave_privada()
+    firma = private_key.sign(
+        file_bytes,
+        ec.ECDSA(hashes.SHA256())
     )
     return base64.b64encode(firma).decode()
 
@@ -295,7 +310,7 @@ def parse_password(raw):
             return f"⚠️ Error: {e}"
     else:
         return "❌ Tipo no compatible"
-    
+
 
 # === MENU PRINCIPAL ===
 if not st.session_state.logged_in:
@@ -326,7 +341,9 @@ if not st.session_state.logged_in:
         with st.form("register_form"):
             new_user = st.text_input("Nombre de Usuario", key="new user")
             new_pass = st.text_input("Contraseña", type="password", key="new_pass")
-            new_pass_confirm = st.text_input("Confirmar Contraseña", type="password", key="new_pass_confirm")
+            new_pass_confirm = st.text_input(
+                "Confirmar Contraseña", type="password", key="new_pass_confirm"
+            )
             submitted_register = st.form_submit_button("Crear Cuenta")
 
             if submitted_register:
@@ -368,7 +385,7 @@ else:
         st.session_state.current_user = ""
         st.rerun()
 
-    if st.session_state.current_user.capitalize() == "Tecdemonterrey":  
+    if st.session_state.current_user.capitalize() == "Tecdemonterrey":
         # === TABS PARA ADMINISTRADOR ===
         admin_tabs = st.tabs(
             [
@@ -397,46 +414,76 @@ else:
                     if username.capitalize() != "Tecdemonterrey":
                         if st.button("Eliminar", key=f"delete_{username}"):
                             try:
-                                users_table.delete_entity(partition_key="usuario", row_key=username)
-                                st.success(f"Usuario '{username}' eliminado correctamente.")
+                                users_table.delete_entity(
+                                    partition_key="usuario", row_key=username
+                                )
+                                st.success(
+                                    f"Usuario '{username}' eliminado correctamente."
+                                )
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"No se pudo eliminar el usuario: {e}")
                     else:
                         pass
-                
+
         # === TAB 2: Firmar Archivos ===
-        with admin_tabs[1]:
-            st.subheader("Firma de Archivo 📁")
-            
-            uploaded_file = st.file_uploader(
-                "Selecciona un archivo para firmar", key="file_firma"
+with admin_tabs[1]:
+    st.subheader("Firma de Archivo 📁")
+
+    uploaded_file = st.file_uploader(
+        "Selecciona un archivo para firmar", key="file_firma"
+    )
+
+    usuarios = load_users()["username"].to_list()
+
+    usuario_objetivo = st.selectbox(
+        "Selecciona el destinatario del documento firmado:", usuarios
+    )
+
+    if uploaded_file:
+        file_bytes = uploaded_file.read()
+
+        firma_base64 = None
+        algoritmo_usado = None
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("Firmar con RSA"):
+                firma_base64 = firmar_archivo(
+                    file_bytes
+                )  # Suponiendo que firmas con RSA usan esta función
+                algoritmo_usado = "RSA"
+
+        with col2:
+            if st.button("Firmar con ECDSA"):
+                firma_base64 = firmar_archivo_ecdsa(
+                    file_bytes
+                )  # Suponiendo función para firmar con ECDSA
+                algoritmo_usado = "ECDSA"
+
+        if firma_base64:
+            st.text_area("Firma generada (Base64):", value=firma_base64, height=150)
+
+            destinatario = (
+                st.session_state.current_user.capitalize()
+                if usuario_objetivo.startswith("(")
+                else usuario_objetivo
             )
-            
-            usuarios = load_users()['username'].to_list()
 
-            usuario_objetivo = st.selectbox("Selecciona el destinatario del documento firmado:", usuarios)
-            
-            if uploaded_file:
-                file_bytes = uploaded_file.read()
-                firma_base64 = firmar_archivo(file_bytes)
-                st.text_area("Firma generada (Base64):", value=firma_base64, height=150)
+            if st.button("✅ Confirmar Firma"):
+                guardar_archivo_firmado(
+                    destinatario, uploaded_file.name, firma_base64, file_bytes
+                )
+                st.success(f"Archivo firmado correctamente con {algoritmo_usado}")
 
-                destinatario = (
-                    st.session_state.current_user.capitalize()
-                    if usuario_objetivo.startswith("(")
-                    else usuario_objetivo
+                st.download_button(
+                    label="Descargar archivo .firma 📥",
+                    data=firma_base64,
+                    file_name=f"{uploaded_file.name}.firma",
+                    mime="text/plain",
                 )
 
-                if st.button("✅ Confirmar Firma"):
-                    guardar_archivo_firmado(destinatario, uploaded_file.name, firma_base64, file_bytes)
-
-                    st.download_button(
-                        label="Descargar archivo .firma 📥",
-                        data=firma_base64,
-                        file_name=f"{uploaded_file.name}.firma",
-                        mime="text/plain",
-                    )
         # === TAB 3: Verificar Firmas ===
         with admin_tabs[2]:
             st.subheader("Verificar Firma ✅")
@@ -475,7 +522,9 @@ else:
             all_firmas = []
 
             try:
-                blob_list = files_container_client.list_blobs(name_starts_with="firmas/")
+                blob_list = files_container_client.list_blobs(
+                    name_starts_with="firmas/"
+                )
                 for blob in blob_list:
                     if blob.name.endswith(".firma"):
                         parts = blob.name.split("/")
@@ -509,7 +558,7 @@ else:
                                 data=firma_data,
                                 file_name=f"{archivo}.firma",
                                 mime="text/plain",
-                                key=f"dl_firma_admin_{usuario}_{archivo}"
+                                key=f"dl_firma_admin_{usuario}_{archivo}",
                             )
                         except Exception:
                             st.error("Error al obtener .firma")
@@ -526,7 +575,7 @@ else:
                                 data=meta_data,
                                 file_name=f"{archivo}.meta.txt",
                                 mime="text/plain",
-                                key=f"dl_meta_admin_{usuario}_{archivo}"
+                                key=f"dl_meta_admin_{usuario}_{archivo}",
                             )
                         except Exception:
                             st.error("Error al obtener .meta")
@@ -543,7 +592,7 @@ else:
                                 data=original_data,
                                 file_name=archivo,
                                 mime="application/octet-stream",
-                                key=f"dl_file_admin_{usuario}_{archivo}"
+                                key=f"dl_file_admin_{usuario}_{archivo}",
                             )
                         except Exception:
                             st.error("Error al obtener archivo original")
@@ -555,7 +604,9 @@ else:
                                 firma_blob.delete_blob()
                                 meta_blob.delete_blob()
                                 original_blob.delete_blob()
-                                st.success(f"Archivo '{archivo}' eliminado correctamente.")
+                                st.success(
+                                    f"Archivo '{archivo}' eliminado correctamente."
+                                )
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"No se pudo eliminar el archivo: {e}")
@@ -602,14 +653,24 @@ else:
         with admin_tabs[5]:
             st.subheader("🔑 Cambiar Contraseña")
 
-            old_pass = st.text_input("Contraseña actual", type="password", key="old_pass")
-            new_pass = st.text_input("Nueva contraseña", type="password", key="new_pass_user")
-            confirm_new_pass = st.text_input("Confirmar nueva contraseña", type="password", key="confirm_new_pass_user")
+            old_pass = st.text_input(
+                "Contraseña actual", type="password", key="old_pass"
+            )
+            new_pass = st.text_input(
+                "Nueva contraseña", type="password", key="new_pass_user"
+            )
+            confirm_new_pass = st.text_input(
+                "Confirmar nueva contraseña",
+                type="password",
+                key="confirm_new_pass_user",
+            )
 
             if st.button("Actualizar Contraseña"):
                 if new_pass != confirm_new_pass:
                     st.error("Las nuevas contraseñas no coinciden ❌")
-                elif not verify_user(st.session_state.current_user.capitalize(), old_pass):
+                elif not verify_user(
+                    st.session_state.current_user.capitalize(), old_pass
+                ):
                     st.error("La contraseña actual es incorrecta ❌")
                 elif len(new_pass) < 8:
                     st.error("La contraseña debe tener al menos 8 caracteres ❌")
@@ -617,7 +678,9 @@ else:
                     new_hashed = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
                     try:
                         # Obtener entidad actual
-                        user_data = users_table.get_entity("usuario", st.session_state.current_user.capitalize())
+                        user_data = users_table.get_entity(
+                            "usuario", st.session_state.current_user.capitalize()
+                        )
                         user_data["Password"] = new_hashed
 
                         # Reemplazar sin usar 'mode'
@@ -627,12 +690,15 @@ else:
                     except Exception as e:
                         st.error(f"No se pudo actualizar la contraseña: {e}")
 
-
     else:
 
         # === TABS PARA USUARIOS REGULARES ===
         signed_tabs = st.tabs(
-            ["Verificar Firma ✅", "Visualizar Archivos Verificados por el Administrador 📁", "🔑 Cambiar Contraseña"]
+            [
+                "Verificar Firma ✅",
+                "Visualizar Archivos Verificados por el Administrador 📁",
+                "🔑 Cambiar Contraseña",
+            ]
         )
 
         # === Verificar Firma ===
@@ -691,51 +757,67 @@ else:
                     with col2:
                         firma_path = f"firmas/{st.session_state.current_user.capitalize()}/{item['Archivo']}.firma"
                         try:
-                            firma_blob = files_container_client.get_blob_client(firma_path)
+                            firma_blob = files_container_client.get_blob_client(
+                                firma_path
+                            )
                             firma_data = firma_blob.download_blob().readall()
                             st.download_button(
                                 label="📥 .firma",
                                 data=firma_data,
                                 file_name=f"{item['Archivo']}.firma",
                                 mime="text/plain",
-                                key=f"dl_firma_{item['Archivo']}"
+                                key=f"dl_firma_{item['Archivo']}",
                             )
                         except Exception:
                             st.error("Error al obtener archivo .firma")
                     with col3:
                         original_path = f"firmas/{st.session_state.current_user.capitalize()}/{item['Archivo']}"
                         try:
-                            original_blob = files_container_client.get_blob_client(original_path)
+                            original_blob = files_container_client.get_blob_client(
+                                original_path
+                            )
                             original_data = original_blob.download_blob().readall()
                             st.download_button(
                                 label="📎 Archivo",
                                 data=original_data,
                                 file_name=item["Archivo"],
                                 mime="application/octet-stream",
-                                key=f"dl_original_{item['Archivo']}"
+                                key=f"dl_original_{item['Archivo']}",
                             )
                         except Exception:
                             st.error("Error al obtener archivo original")
             else:
                 st.info("No tienes archivos firmados todavía.")
-                                            
+
         # CAMBIAR CONTRASEÑA ===
         with signed_tabs[2]:
             st.subheader("🔑 Cambiar Contraseña")
 
-            old_pass = st.text_input("Contraseña actual", type="password", key="old_pass")
-            new_pass = st.text_input("Nueva contraseña", type="password", key="new_pass_user")
-            confirm_new_pass = st.text_input("Confirmar nueva contraseña", type="password", key="confirm_new_pass_user")
+            old_pass = st.text_input(
+                "Contraseña actual", type="password", key="old_pass"
+            )
+            new_pass = st.text_input(
+                "Nueva contraseña", type="password", key="new_pass_user"
+            )
+            confirm_new_pass = st.text_input(
+                "Confirmar nueva contraseña",
+                type="password",
+                key="confirm_new_pass_user",
+            )
 
             if st.button("Actualizar Contraseña"):
                 if new_pass != confirm_new_pass:
                     st.error("Las nuevas contraseñas no coinciden ❌")
-                elif not verify_user(st.session_state.current_user.capitalize(), old_pass):
+                elif not verify_user(
+                    st.session_state.current_user.capitalize(), old_pass
+                ):
                     st.error("La contraseña actual es incorrecta ❌")
                 else:
                     new_hashed = bcrypt.hashpw(new_pass.encode(), bcrypt.gensalt())
                     try:
-                        user_data = users_table.get_entity("usuario", st.session_state.current_user.capitalize())
+                        user_data = users_table.get_entity(
+                            "usuario", st.session_state.current_user.capitalize()
+                        )
                         user_data["Password"] = new_hashed
                         users_table.upsert_entity(user_data)
 
