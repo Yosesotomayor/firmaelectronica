@@ -474,7 +474,7 @@ else:
 
                 with col1:
                     if st.button("Firmar con RSA"):
-                        firma_base64 = firmar_archivo(file_bytes)  
+                        firma_base64 = firmar_archivo(file_bytes)
                         algoritmo_usado = "RSA"
 
                 with col2:
