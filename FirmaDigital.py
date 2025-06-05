@@ -107,7 +107,7 @@ def insert_access_log(username):
     )
 
 
-def guardar_archivo_firmado(username, filename, firma_base64, file_bytes=None):
+def guardar_archivo_firmado(username, filename, firma_base64, file_bytes=None, algoritmo=None):
     firma_blob_path = f"firmas/{username}/{filename}.firma"
     metadata_blob_path = f"firmas/{username}/{filename}.meta.txt"
     original_blob_path = f"firmas/{username}/{filename}"
@@ -132,11 +132,13 @@ def guardar_archivo_firmado(username, filename, firma_base64, file_bytes=None):
         f"Archivo: {filename}\n"
         f"Fecha: {datetime.now()}\n"
     )
+    if algoritmo:
+        metadata_content += f"Algoritmo: {algoritmo}\n"
+
     meta_blob = blob_service_client.get_blob_client(
         container=FILES_CONTAINER, blob=metadata_blob_path
     )
     meta_blob.upload_blob(metadata_content, overwrite=True)
-
 
 def load_users():
     users = users_table.query_entities("PartitionKey eq 'usuario'")
@@ -648,7 +650,19 @@ else:
                     archivo = row["Archivo"]
 
                     with col1:
-                        st.markdown(f"**📄 {archivo}** — Propietario: `{usuario}`")
+                        # Obtener contenido .meta.txt para extraer el algoritmo
+                        algoritmo_text = ""  
+                        try:
+                            meta_blob = files_container_client.get_blob_client(f"firmas/{usuario}/{archivo}.meta.txt")
+                            meta_data = meta_blob.download_blob().readall().decode()
+                            for line in meta_data.splitlines():
+                                if line.startswith("Algoritmo:"):
+                                    algoritmo_text = line.replace("Algoritmo:", "").strip()
+                                    break
+                        except Exception:
+                            algoritmo_text = "Desconocido"
+
+                        st.markdown(f"**📄 {archivo}** — Propietario: `{usuario}` — Algoritmo: `{algoritmo_text}`")
 
                     # Descargar .firma
                     with col2:
