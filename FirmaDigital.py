@@ -722,16 +722,39 @@ else:
                     # Botón eliminar
                     with col5:
                         if st.button("🗑 Eliminar", key=f"del_{usuario}_{archivo}"):
+                            errores = []
+
                             try:
-                                firma_blob.delete_blob()
-                                meta_blob.delete_blob()
-                                original_blob.delete_blob()
-                                st.success(
-                                    f"Archivo '{archivo}' eliminado correctamente."
+                                firma_blob = files_container_client.get_blob_client(
+                                    f"firmas/{usuario}/{archivo}.firma"
                                 )
-                                st.rerun()
+                                firma_blob.delete_blob()
                             except Exception as e:
-                                st.error(f"No se pudo eliminar el archivo: {e}")
+                                errores.append(f"❌ No se pudo eliminar .firma: {e}")
+
+                            try:
+                                meta_blob = files_container_client.get_blob_client(
+                                    f"firmas/{usuario}/{archivo}.meta.txt"
+                                )
+                                meta_blob.delete_blob()
+                            except Exception as e:
+                                errores.append(f"❌ No se pudo eliminar .meta.txt: {e}")
+
+                            try:
+                                original_blob = files_container_client.get_blob_client(
+                                    f"firmas/{usuario}/{archivo}"
+                                )
+                                original_blob.delete_blob()
+                            except Exception as e:
+                                errores.append(f"❌ No se pudo eliminar el archivo original: {e}")
+
+                            if errores:
+                                for error in errores:
+                                    st.warning(error)
+                            else:
+                                st.success(f"Archivo '{archivo}' eliminado correctamente ✅")
+
+                            st.rerun()
             else:
                 st.info("No hay archivos firmados todavía.")
 
