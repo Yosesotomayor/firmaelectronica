@@ -560,7 +560,7 @@ else:
                 "Sube el archivo original", key="file_original"
             )
             signature_file = st.file_uploader(
-                "Sube el archivo .firma", key="file_signature"
+                "Sube el archivo .firma", key="file_signature", type=['firma']
             )
 
             if original_file and signature_file:
@@ -830,7 +830,7 @@ else:
                 "Sube el archivo original", key="file_original"
             )
             signature_file = st.file_uploader(
-                "Sube el archivo .firma", key="file_signature"
+                "Sube el archivo .firma", key="file_signature", type=['firma']
             )
 
             if original_file and signature_file:
